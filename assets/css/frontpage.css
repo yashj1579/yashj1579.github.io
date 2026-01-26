@@ -74,6 +74,33 @@ html body .site-title {
     font-size: 1em;
     max-width: 90%;
   }
+  
+  .hero-name {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+  }
+  
+  .typewriter h2 {
+    font-size: 1.2em;
+  }
+  
+  .projects-page h1 {
+    font-size: 2.5em;
+    margin-bottom: 40px;
+    letter-spacing: 0.05em;
+    padding: 0 10px;
+  }
+  
+  .projects-page h1::before,
+  .projects-page h1::after {
+    margin: 0 10px;
+    font-size: 0.5em;
+  }
+  
+  .slide {
+    margin-right: 50px;
+    padding: 0 3%;
+  }
 }
 
 .hero-content {
@@ -258,6 +285,10 @@ section {
   font-weight: bold;
   letter-spacing: 0.1em;
   position: relative;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 

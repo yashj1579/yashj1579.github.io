@@ -693,12 +693,20 @@ const slides = document.querySelectorAll('.slide');
     return;
   }
   
-  // Calculate gap between slides (100px margin from CSS)
-  const gap = 100;
-  
-  function updateSlideshowDimensions() {
+  // Function to get responsive gap and offset
+  function getResponsiveValues() {
     const parentElement = slidesContainer.parentElement;
     const viewportWidth = parentElement.offsetWidth || window.innerWidth;
+    const isMobile = viewportWidth < 768;
+    return {
+      gap: isMobile ? 50 : 100,
+      offset: isMobile ? 30 : 150,
+      viewportWidth: viewportWidth
+    };
+  }
+  
+  function updateSlideshowDimensions() {
+    const { gap, viewportWidth } = getResponsiveValues();
     const totalWidth = slides.length * viewportWidth + (slides.length - 1) * gap;
     slidesContainer.style.width = `${totalWidth}px`;
     
@@ -716,10 +724,9 @@ function showSlide(index) {
     slideIndex = index;
     
     // Calculate translate based on viewport width + gap between slides
-    // Subtract 150px to shift left
-    const parentElement = slidesContainer.parentElement;
-    const currentViewportWidth = parentElement.offsetWidth || window.innerWidth;
-    const translateX = -(currentViewportWidth * slideIndex + gap * slideIndex) - 150;
+    // Responsive offset: smaller on mobile, larger on desktop
+    const { gap, offset, viewportWidth } = getResponsiveValues();
+    const translateX = -(viewportWidth * slideIndex + gap * slideIndex) - offset;
     slidesContainer.style.transform = `translateX(${translateX}px)`;
   }
   
