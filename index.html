@@ -1,4 +1,67 @@
 ---
-layout: home
-author_profile: true
+layout: default
+permalink: /
+title: "Yash Jain - Computational Engineering & Mathematics"
 ---
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    }
+  };
+</script>
+<div class="hero">
+  <canvas id="cars-canvas"></canvas>
+  <div class="equations-background" id="equations-background"></div>
+  <div class="hero-content">
+    <h1 class="hero-name">Yash Jain</h1>
+    <div class="typewriter">
+      <h2 id="hero-text"></h2>
+    </div>
+  </div>
+</div>
+
+<section class="about-me">
+  <canvas id="particle-canvas"></canvas>
+  <h2>About Me</h2>
+  <p>
+    I’m a senior undergraduate at the University of Texas at Austin pursuing a double major in
+    <a href="https://cockrell.utexas.edu/academics/computational-engineering/" target="_blank">Computational Engineering</a> 
+    and 
+    <a href="https://math.utexas.edu/" target="_blank">Mathematics</a>.
+    My research is under <strong>David Fridovich-Keil</strong>, focusing on control and safety in autonomous systems, game-theoretic decision making, and machine learning applied to inverse problems.
+  </p>
+  <p>
+    My work spans multi-agent dynamic game frameworks, real-time prediction, and control algorithms in simulated environments, including autonomous vehicles. My research paper is currently under review: 
+    <a href="https://arxiv.org/pdf/2601.00696" target="_blank">IJRR Paper</a>.
+  </p>
+</section>
+
+<section class="research-slideshow">
+  <h2>Research Interests</h2>
+  <div class="slides-container">
+    <div class="slide">
+      <img src="{{ '/assets/images/research1.png' | relative_url }}" alt="Autonomous Control">
+      <h3>Control & Safety in Autonomous Settings</h3>
+      <p>Designing algorithms that ensure autonomous systems act safely in real-world environments.</p>
+    </div>
+    <div class="slide">
+      <img src="{{ '/assets/images/research2.png' | relative_url }}" alt="Game Theory">
+      <h3>Game-Theoretic Decision Making</h3>
+      <p>Predicting and optimizing the behavior of multiple agents interacting strategically.</p>
+    </div>
+    <div class="slide">
+      <img src="{{ '/assets/images/research3.png' | relative_url }}" alt="Machine Learning">
+      <h3>Machine Learning & Inverse Problems</h3>
+      <p>Using ML to infer hidden system dynamics and decision-making rules from observed data.</p>
+    </div>
+  </div>
+  <button id="prev-slide">‹</button>
+  <button id="next-slide">›</button>
+</section>
+
+<script src="{{ '/assets/js/frontpage.js' | relative_url }}"></script>
+

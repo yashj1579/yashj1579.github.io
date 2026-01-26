@@ -1,0 +1,10 @@
+- title: "Moncrief Summer Internship"
+  description: "Poster Presentation showcasing research work during the Moncrief Summer Internship Program."
+  link: "https://oden.utexas.edu/news-and-events/news/Building-Skills-Connections-and-Confidence-Moncrief-Summer-Internship-Program-2025/"
+  image: "/assets/images/moncrief_poster.png"
+
+- title: "Research Paper & Demo"
+  description: "Multi-agent dynamic game frameworks, real-time prediction, and control algorithms in simulated environments."
+  link: "https://arxiv.org/pdf/2601.00696"
+  video: "/assets/videos/research_demo.mp4"
+

@@ -2,4 +2,33 @@
 
 <!-- insert favicons. use https://realfavicongenerator.net/ -->
 
+<!-- Load Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+<!-- Load frontpage CSS after theme CSS to override defaults -->
+<link rel="stylesheet" href="{{ '/assets/css/frontpage.css' | relative_url }}">
+
+<!-- Additional inline styles to ensure masthead background is dark -->
+<style>
+  .masthead,
+  .masthead *,
+  .masthead__inner-wrap,
+  .masthead__inner-wrap *,
+  .masthead__menu,
+  .masthead__menu *,
+  .greedy-nav,
+  .greedy-nav *,
+  .site-nav,
+  .site-nav *,
+  .visible-links,
+  .visible-links *,
+  .hidden-links,
+  .hidden-links * {
+    background-color: #0f111a !important;
+    background: #0f111a !important;
+  }
+</style>
+
 <!-- end custom head snippets -->
