@@ -28,9 +28,10 @@ html body .site-title {
   position: relative;
   height: 80vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
+  padding-top: 15vh;
 }
 
 .equations-background {
@@ -69,37 +70,90 @@ html body .site-title {
   opacity: 0;
 }
 
-@media (max-width: 768px) {
+/* Mobile styles - apply to phones and small tablets */
+@media screen and (max-width: 768px) {
   .equation-display {
     font-size: 1em;
     max-width: 90%;
   }
   
   .hero-name {
-    font-size: 2.5em;
-    margin-bottom: 15px;
+    font-size: 2.5em !important;
+    margin-bottom: 15px !important;
   }
   
   .typewriter h2 {
-    font-size: 1.2em;
+    font-size: 1.2em !important;
   }
   
   .projects-page h1 {
-    font-size: 2.5em;
-    margin-bottom: 40px;
-    letter-spacing: 0.05em;
-    padding: 0 10px;
+    font-size: 2.5em !important;
+    margin-bottom: 40px !important;
+    letter-spacing: 0.05em !important;
+    padding: 0 10px !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    box-sizing: border-box !important;
   }
   
   .projects-page h1::before,
   .projects-page h1::after {
-    margin: 0 10px;
-    font-size: 0.5em;
+    margin: 0 10px !important;
+    font-size: 0.5em !important;
   }
   
   .slide {
-    margin-right: 50px;
-    padding: 0 3%;
+    margin-right: 50px !important;
+    padding: 0 3% !important;
+  }
+  
+  .research-slideshow {
+    width: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+  
+  .slides-container {
+    width: 100% !important;
+    display: flex !important;
+  }
+  
+  section {
+    padding: 40px 5% !important;
+  }
+  
+  .projects-page {
+    padding: 40px 5% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  #prev-slide, #next-slide {
+    font-size: 1.5em !important;
+    padding: 8px !important;
+  }
+  
+  #prev-slide {
+    left: 5px !important;
+  }
+  
+  #next-slide {
+    right: 5px !important;
+  }
+  
+  .hero {
+    height: 60vh !important;
+    padding-top: 10vh !important;
+  }
+  
+  .hero-content {
+    width: 100% !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -188,25 +242,31 @@ section {
   position: relative;
   overflow: hidden;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .slides-container {
   display: flex;
-  overflow: hidden;
+  overflow: visible !important;
   position: relative;
   transition: transform 0.5s ease;
   will-change: transform;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .slide {
   flex-shrink: 0;
+  flex-grow: 0;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
   padding: 0 5%;
-  margin-right: 100px;
+  margin-right: 0; /* Gap is now handled by JavaScript */
+  overflow: hidden;
 }
 
 .slide:last-child {
@@ -255,6 +315,8 @@ section {
   margin: 0 auto;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #projects-particle-canvas {
@@ -281,7 +343,7 @@ section {
   font-size: 4.5em;
   color: #cc0000;
   margin-bottom: 60px;
-  text-align: center;
+  text-align: center !important;
   font-weight: bold;
   letter-spacing: 0.1em;
   position: relative;
@@ -289,6 +351,7 @@ section {
   margin-left: auto;
   margin-right: auto;
   display: block;
+  box-sizing: border-box;
 }
 
 

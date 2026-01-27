@@ -681,82 +681,198 @@ function animate() {
 }
 animate();
 
-// Research slideshow
+// Research slideshow - Centering-based approach
 let slideIndex = 0;
 
 function initSlideshow() {
-const slides = document.querySelectorAll('.slide');
+  const slides = document.querySelectorAll('.slide');
   const slidesContainer = document.querySelector('.slides-container');
+  const slideshowParent = slidesContainer?.parentElement;
   
-  if (!slidesContainer || slides.length === 0) {
+  if (!slidesContainer || slides.length === 0 || !slideshowParent) {
     setTimeout(initSlideshow, 100);
     return;
   }
   
-  // Function to get responsive gap and offset
-  function getResponsiveValues() {
-    const parentElement = slidesContainer.parentElement;
-    const viewportWidth = parentElement.offsetWidth || window.innerWidth;
-    const isMobile = viewportWidth < 768;
-    return {
-      gap: isMobile ? 50 : 100,
-      offset: isMobile ? 30 : 150,
-      viewportWidth: viewportWidth
-    };
+  // Get the viewport width (visible area of slideshow)
+  function getViewportWidth() {
+    // Use the actual visible width of the slideshow container
+    const rect = slideshowParent.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(slideshowParent);
+    const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+    const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+    // Subtract padding to get actual content width
+    const viewportWidth = rect.width - paddingLeft - paddingRight;
+    return Math.max(Math.floor(viewportWidth), 300);
   }
   
-  function updateSlideshowDimensions() {
-    const { gap, viewportWidth } = getResponsiveValues();
-    const totalWidth = slides.length * viewportWidth + (slides.length - 1) * gap;
-    slidesContainer.style.width = `${totalWidth}px`;
+  // Get responsive gap between slides
+  function getGap() {
+    const width = getViewportWidth();
+    if (width < 768) return 50; // Increased from 20
+    if (width < 1200) {
+      const scale = (width - 768) / (1200 - 768);
+      return 50 + (scale * 100); // 50 to 150 (increased from 20-100)
+    }
+    return 150; // Increased from 100
+  }
+  
+  // Update slide dimensions to match viewport
+  function updateDimensions() {
+    if (!slidesContainer || slides.length === 0) return;
     
-    slides.forEach(slide => {
+    const viewportWidth = getViewportWidth();
+    const gap = getGap();
+    
+    // Ensure viewport width is valid
+    if (viewportWidth <= 0 || isNaN(viewportWidth)) {
+      return;
+    }
+    
+    // Set container width to fit all slides - ensure it's always wide enough
+    const totalWidth = slides.length * viewportWidth + (slides.length - 1) * gap;
+    slidesContainer.style.width = `${Math.max(totalWidth, viewportWidth * slides.length)}px`;
+    slidesContainer.style.minWidth = `${totalWidth}px`;
+    
+    // Set each slide to viewport width and ensure they're always visible
+    slides.forEach((slide, index) => {
+      if (!slide || !slide.parentElement) {
+        return;
+      }
+      
+      // Ensure slide has proper dimensions
       slide.style.width = `${viewportWidth}px`;
       slide.style.minWidth = `${viewportWidth}px`;
+      slide.style.maxWidth = `${viewportWidth}px`;
+      slide.style.flexShrink = '0';
+      slide.style.flexGrow = '0';
+      slide.style.display = 'flex';
+      slide.style.visibility = 'visible';
+      slide.style.opacity = '1';
+      // Override CSS margin-right - we'll use gap in calculation instead
+      slide.style.marginRight = index < slides.length - 1 ? `${gap}px` : '0px';
+      
+      // Ensure slide content is visible
+      const slideImg = slide.querySelector('img');
+      const slideText = slide.querySelector('h3, p');
+      if (slideImg) {
+        slideImg.style.display = 'block';
+        slideImg.style.visibility = 'visible';
+      }
+      if (slideText) {
+        slideText.style.visibility = 'visible';
+      }
     });
+    
+    // Force a reflow and verify dimensions
+    void slidesContainer.offsetHeight;
+    
+    // Verify all slides are still in the container
+    const slidesInContainer = slidesContainer.querySelectorAll('.slide');
+    if (slidesInContainer.length !== slides.length) {
+      console.warn('Slide count mismatch! Expected:', slides.length, 'Found:', slidesInContainer.length);
+    }
   }
   
-  updateSlideshowDimensions();
-
-function showSlide(index) {
+  // Center a slide using fixed offsets - clean and simple approach
+  function centerSlide(index) {
     if (index < 0) index = slides.length - 1;
     if (index >= slides.length) index = 0;
     slideIndex = index;
     
-    // Calculate translate based on viewport width + gap between slides
-    // Responsive offset: smaller on mobile, larger on desktop
-    const { gap, offset, viewportWidth } = getResponsiveValues();
-    const translateX = -(viewportWidth * slideIndex + gap * slideIndex) - offset;
-    slidesContainer.style.transform = `translateX(${translateX}px)`;
+    // Update dimensions first
+    updateDimensions();
+    
+    // Wait for dimensions to be applied
+    setTimeout(() => {
+      const viewportWidth = getViewportWidth();
+      const gap = getGap();
+      
+      if (viewportWidth <= 0 || slides.length === 0) return;
+      
+      // Calculate the fixed offset per slide (viewport width + gap)
+      const slideOffset = viewportWidth + gap;
+      
+      // Calculate viewport center - use viewportWidth which already accounts for padding
+      const viewportCenter = viewportWidth / 2;
+      
+      // Calculate where the slide should be positioned
+      // Slide 0 starts at 0, slide 1 at slideOffset, slide 2 at 2*slideOffset, etc.
+      const slideLeftEdge = slideIndex * slideOffset;
+      
+      // Calculate slide center
+      const slideCenter = slideLeftEdge + (viewportWidth / 2);
+      
+      // Calculate translate to center: move container so slide center aligns with viewport center
+      // For slide 0: translateX = viewportCenter - (0 + viewportWidth/2) = viewportCenter - viewportWidth/2 = 0
+      // For slide 1: translateX = viewportCenter - (slideOffset + viewportWidth/2) = viewportCenter - slideOffset - viewportWidth/2
+      let translateX = viewportCenter - slideCenter;
+      
+      // Round to whole pixels
+      translateX = Math.round(translateX);
+      
+      // Apply transform
+      const wasResizing = isResizing;
+      if (wasResizing) {
+        slidesContainer.style.transition = 'none';
+      } else {
+        slidesContainer.style.transition = 'transform 0.5s ease';
+      }
+      
+      slidesContainer.style.transform = `translateX(${translateX}px)`;
+      
+      // Re-enable transition after a moment if we disabled it
+      if (wasResizing) {
+        setTimeout(() => {
+          slidesContainer.style.transition = 'transform 0.5s ease';
+        }, 100);
+      }
+    }, 100);
   }
   
+  // Initialize dimensions
+  updateDimensions();
+  centerSlide(0);
+  
+  // Button handlers
   const prevBtn = document.getElementById('prev-slide');
   const nextBtn = document.getElementById('next-slide');
   
   if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      showSlide(slideIndex - 1);
-    });
+    prevBtn.addEventListener('click', () => centerSlide(slideIndex - 1));
   }
   
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      showSlide(slideIndex + 1);
-    });
+    nextBtn.addEventListener('click', () => centerSlide(slideIndex + 1));
   }
   
-  // Handle window resize
+  // Handle window resize - recalculate and recenter
   let resizeTimeout;
+  let isResizing = false;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      updateSlideshowDimensions();
-  showSlide(slideIndex);
-    }, 100);
+      isResizing = true;
+      
+      // Update dimensions
+      updateDimensions();
+      
+      // Wait a moment for dimensions to apply, then recenter
+      setTimeout(() => {
+        // Ensure slideIndex is still valid
+        if (slideIndex >= slides.length) slideIndex = slides.length - 1;
+        if (slideIndex < 0) slideIndex = 0;
+        
+        // Recenter the current slide
+        centerSlide(slideIndex);
+        
+        // Reset resizing flag after a delay
+        setTimeout(() => {
+          isResizing = false;
+        }, 300);
+      }, 150);
+    }, 250); // Longer timeout to reduce lag spikes
   });
-  
-  // Initialize on load - ensure we start at slide 0
-  showSlide(0);
 }
 
 // Initialize when DOM is ready
