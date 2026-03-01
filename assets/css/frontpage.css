@@ -102,15 +102,21 @@ html body .site-title {
   .research-interests-layout {
     flex-direction: column;
     gap: 30px;
+    align-items: center;
   }
   
   .research-photo-wrap {
     flex: 0 0 auto;
     max-width: 100%;
+    align-self: center;
+    display: flex;
+    justify-content: center;
   }
   
   .research-photo {
     max-height: 320px;
+    width: auto;
+    max-width: 100%;
   }
   
   .research-interests-scroll {
