@@ -2,6 +2,11 @@ title: "Yash Jain"
 description: "Personal academic website of Yash Jain"
 baseurl: ""
 url: "https://yashj1579.github.io"
+
+# Hide the RSS/Atom feed link in footer and head
+atom_feed:
+  hide: true
+
 defaults:
   - scope:
       path: ""

@@ -186,7 +186,7 @@ function initEquations() {
   
   function scheduleNextSpawn() {
     // Random interval between 1-3 seconds for next spawn
-    const delay = 750 + Math.random() * 500;
+    const delay = 1500 + Math.random() * 500;
     setTimeout(() => {
       spawnSingleEquation();
       scheduleNextSpawn(); // Schedule the next one
@@ -319,7 +319,7 @@ class Particle {
 
 // Create particles
 const particles = [];
-for (let i = 0; i < 150; i++) {
+for (let i = 0; i < 1000; i++) {
   particles.push(new Particle());
 }
 
@@ -453,7 +453,7 @@ class Car {
     
     // Check if 2 seconds have passed since last lane change (used for both collision and random lane changes)
     const currentTime = Date.now();
-    const canChangeLanes = (currentTime - this.lastLaneChangeTime) >= 2000;
+    const canChangeLanes = (currentTime - this.lastLaneChangeTime) >= 200;
     
     // Collision avoidance - if too close to car ahead, switch lanes and reduce max speed
     let carAhead = null;
@@ -583,7 +583,7 @@ class Car {
 
 // Create multiple cars with different behaviors
 const cars = [];
-const colors = ["#cc0000", "#00ff99", "#3b82ff", "#ffaa00", "#ff00ff", "#00ffff", "#ffff00"];
+const colors = ["#d65c5c", "#00ff99", "#3b82ff", "#ffaa00", "#ff00ff", "#00ffff", "#ffff00"];
 
 // Function to get random color (equal probability for all colors)
 function getRandomColor() {
@@ -681,10 +681,15 @@ function animate() {
 }
 animate();
 
-// Research slideshow - Centering-based approach
+// Research section: either slideshow (legacy) or new photo + scroll layout
 let slideIndex = 0;
 
 function initSlideshow() {
+  // If the new research interests section is present, skip slideshow init
+  if (document.querySelector('.research-interests-section')) {
+    return;
+  }
+  
   const slides = document.querySelectorAll('.slide');
   const slidesContainer = document.querySelector('.slides-container');
   const slideshowParent = slidesContainer?.parentElement;
