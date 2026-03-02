@@ -1,11 +1,11 @@
 html {
-  background-color: #fff !important;
+  background: linear-gradient(165deg, #faf9f7 0%, #f5f4f1 30%, #faf9f7 50%, #f3f2ef 70%, #faf9f7 100%) !important;
   font-family: 'Playfair Display', serif;
 }
 
 body {
   font-family: 'Playfair Display', serif;
-  background-color: #fff !important;
+  background: linear-gradient(165deg, #faf9f7 0%, #f5f4f1 30%, #faf9f7 50%, #f3f2ef 70%, #faf9f7 100%) !important;
   color: #333;
   margin: 0;
 }
@@ -231,8 +231,8 @@ section {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  /* Distinct background - light band to stand out */
-  background: linear-gradient(135deg, #f8f8f8 0%, #fff 50%, #f8f8f8 100%);
+  /* Distinct background - light marble band to stand out */
+  background: linear-gradient(135deg, #f5f4f1 0%, #faf9f7 50%, #f5f4f1 100%);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
@@ -580,30 +580,30 @@ section {
   display: block;
 }
 
-/* Fix masthead/navigation colors to match dark theme - using high specificity */
+/* Fix masthead/navigation colors to match theme - marble white */
 body .masthead,
 html body .masthead,
 body .masthead *,
 html body .masthead * {
-  background-color: #fff !important;
-  background: #fff !important;
-  border-bottom-color: #e0e0e0 !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
+  border-bottom-color: #e8e6e3 !important;
 }
 
 body .masthead__inner-wrap,
 html body .masthead__inner-wrap,
 body .masthead__inner-wrap *,
 html body .masthead__inner-wrap * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 body .masthead__menu,
 html body .masthead__menu,
 body .masthead__menu *,
 html body .masthead__menu * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 /* Target greedy-nav specifically - this is the main navigation container */
@@ -611,32 +611,32 @@ body .greedy-nav,
 html body .greedy-nav,
 body .greedy-nav *,
 html body .greedy-nav * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 body .site-nav,
 html body .site-nav,
 body .site-nav *,
 html body .site-nav * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 body .visible-links,
 html body .visible-links,
 body .visible-links *,
 html body .visible-links * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 body .hidden-links,
 html body .hidden-links,
 body .hidden-links *,
 html body .hidden-links * {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
 body .masthead__menu-item a,
@@ -672,17 +672,17 @@ body .greedy-nav .visible-links,
 body .greedy-nav .hidden-links,
 html body .greedy-nav .visible-links,
 html body .greedy-nav .hidden-links {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
 }
 
-/* Fix footer background to match white theme - using high specificity */
+/* Fix footer background to match marble white theme - using high specificity */
 body .page__footer,
 html body .page__footer,
 body #footer,
 html body #footer {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
   color: #333 !important;
 }
 
@@ -690,8 +690,8 @@ body .page__footer footer,
 html body .page__footer footer,
 body #footer footer,
 html body #footer footer {
-  background-color: #fff !important;
-  background: #fff !important;
+  background-color: #faf9f7 !important;
+  background: #faf9f7 !important;
   color: #333 !important;
 }
 
@@ -709,8 +709,8 @@ html body .page__footer a:hover {
 .page__footer-custom {
   margin-top: 2em;
   padding-top: 2em;
-  border-top: 1px solid #e0e0e0;
-  background-color: #fff !important;
+  border-top: 1px solid #e8e6e3;
+  background-color: #faf9f7 !important;
 }
 
 .page__footer-links {
