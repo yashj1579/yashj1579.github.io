@@ -480,6 +480,14 @@ classes: [google-only]
     'hot',
     'cold',
     'weather',
+    'location',
+    'scratch',
+    'scratchpad',
+    'notes',
+    'board',
+    'write',
+    'whiteboard',
+    'blackboard',
     'random',
     'random -d',
     'random -pick',
@@ -1086,7 +1094,7 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
-    if (/^calculator\s*$/.test(raw)) {
+    if (/^calculator\s*$/.test(raw) || /^calc\s*$/.test(raw)) {
       var contentBox = document.createElement('div');
       contentBox.className = 'popup-calc';
       var display = document.createElement('input');
@@ -1522,6 +1530,285 @@ classes: [google-only]
       } else {
         tryFetchWeather(-33.8688, 151.2093);
       }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^location\s*$/.test(raw)) {
+      appendOutput(raw, []);
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-location';
+      contentBox.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+      contentBox.addEventListener('click', function(e) { e.stopPropagation(); });
+      var mapWrap = document.createElement('div');
+      mapWrap.className = 'location-map-wrap';
+      mapWrap.id = 'popup-location-map-wrap';
+      var mapDiv = document.createElement('div');
+      mapDiv.id = 'popup-location-map';
+      mapDiv.className = 'location-map';
+      mapWrap.appendChild(mapDiv);
+      var row = document.createElement('div');
+      row.className = 'location-coords-row';
+      var latInput = document.createElement('input');
+      latInput.type = 'text';
+      latInput.placeholder = 'Latitude';
+      latInput.className = 'location-input';
+      latInput.value = '';
+      var lonInput = document.createElement('input');
+      lonInput.type = 'text';
+      lonInput.placeholder = 'Longitude';
+      lonInput.className = 'location-input';
+      lonInput.value = '';
+      var goBtn = document.createElement('button');
+      goBtn.type = 'button';
+      goBtn.className = 'location-btn';
+      goBtn.textContent = 'Go';
+      var myLocBtn = document.createElement('button');
+      myLocBtn.type = 'button';
+      myLocBtn.className = 'location-btn';
+      myLocBtn.textContent = 'My location';
+      row.appendChild(latInput);
+      row.appendChild(lonInput);
+      row.appendChild(goBtn);
+      row.appendChild(myLocBtn);
+      contentBox.appendChild(mapWrap);
+      contentBox.appendChild(row);
+      var popupResult = createPopupWindow('Location', contentBox, null, { width: 420, height: 380, topOffset: 80, leftOffset: 0, minW: 360, minH: 320 });
+      var mapObj = null;
+      var markerObj = null;
+      var defaultLat = -33.8688;
+      var defaultLon = 151.2093;
+      function setView(lat, lon) {
+        lat = parseFloat(lat);
+        lon = parseFloat(lon);
+        if (isNaN(lat) || isNaN(lon)) return;
+        lat = Math.max(-90, Math.min(90, lat));
+        lon = Math.max(-180, Math.min(180, lon));
+        latInput.value = lat;
+        lonInput.value = lon;
+        if (mapObj) {
+          mapObj.setView([lat, lon], mapObj.getZoom());
+          if (markerObj) markerObj.setLatLng([lat, lon]);
+          else markerObj = (typeof L !== 'undefined' && L.marker) ? L.marker([lat, lon]).addTo(mapObj) : null;
+        }
+      }
+      function initMap(lat, lon) {
+        if (typeof L === 'undefined') return;
+        if (mapObj) { mapObj.remove(); mapObj = null; markerObj = null; }
+        mapObj = L.map('popup-location-map').setView([lat, lon], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mapObj);
+        markerObj = L.marker([lat, lon]).addTo(mapObj);
+        requestAnimationFrame(function() {
+          if (mapObj) mapObj.invalidateSize();
+        });
+      }
+      function onMapResize() {
+        if (mapObj) mapObj.invalidateSize();
+      }
+      function loadLeafletAndInit(lat, lon) {
+        if (typeof L !== 'undefined') {
+          initMap(lat, lon);
+          return;
+        }
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+        var script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        script.crossOrigin = 'anonymous';
+        script.onload = function() { initMap(lat, lon); };
+        document.head.appendChild(script);
+      }
+      goBtn.addEventListener('click', function() {
+        var lat = parseFloat(latInput.value);
+        var lon = parseFloat(lonInput.value);
+        if (!isNaN(lat) && !isNaN(lon)) setView(lat, lon);
+      });
+      myLocBtn.addEventListener('click', function() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            function(p) { setView(p.coords.latitude, p.coords.longitude); },
+            function() { setView(defaultLat, defaultLon); }
+          );
+        } else {
+          setView(defaultLat, defaultLon);
+        }
+      });
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(p) {
+            var lat = p.coords.latitude;
+            var lon = p.coords.longitude;
+            latInput.value = lat;
+            lonInput.value = lon;
+            loadLeafletAndInit(lat, lon);
+          },
+          function() {
+            latInput.value = defaultLat;
+            lonInput.value = defaultLon;
+            loadLeafletAndInit(defaultLat, defaultLon);
+          }
+        );
+      } else {
+        latInput.value = defaultLat;
+        lonInput.value = defaultLon;
+        loadLeafletAndInit(defaultLat, defaultLon);
+      }
+      var resizeObs = new ResizeObserver(function() { onMapResize(); });
+      if (popupResult.win) resizeObs.observe(popupResult.win);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var scratchMatch = /^(?:scratch|scratchpad|notes|board|write)\s*$/i.test(raw);
+    var whiteboardMatch = /^whiteboard\s*$/i.test(raw);
+    var blackboardMatch = /^blackboard\s*$/i.test(raw);
+    if (scratchMatch || whiteboardMatch || blackboardMatch) {
+      appendOutput(raw, []);
+      var theme = whiteboardMatch ? 'whiteboard' : (blackboardMatch ? 'blackboard' : 'scratch');
+      var bg = theme === 'whiteboard' ? '#ffffff' : (theme === 'blackboard' ? '#1a1a1a' : '#e8e8e8');
+      var ink = theme === 'whiteboard' ? '#000000' : (theme === 'blackboard' ? '#ffffff' : '#333333');
+      var title = theme === 'whiteboard' ? 'Whiteboard' : (theme === 'blackboard' ? 'Blackboard' : 'Scratch pad');
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-scratch popup-scratch--' + theme;
+      contentBox.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+      contentBox.addEventListener('click', function(e) { e.stopPropagation(); });
+      var toolbar = document.createElement('div');
+      toolbar.className = 'scratch-toolbar';
+      var pencilBtn = document.createElement('button');
+      pencilBtn.type = 'button';
+      pencilBtn.className = 'scratch-tool-btn scratch-tool--active';
+      pencilBtn.textContent = 'Pencil';
+      pencilBtn.title = 'Draw';
+      var eraserBtn = document.createElement('button');
+      eraserBtn.type = 'button';
+      eraserBtn.className = 'scratch-tool-btn';
+      eraserBtn.textContent = 'Eraser';
+      eraserBtn.title = 'Erase';
+      var clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.className = 'scratch-clear-btn';
+      clearBtn.textContent = 'Clear';
+      toolbar.appendChild(pencilBtn);
+      toolbar.appendChild(eraserBtn);
+      toolbar.appendChild(clearBtn);
+      var canvas = document.createElement('canvas');
+      canvas.className = 'scratch-canvas';
+      contentBox.appendChild(toolbar);
+      contentBox.appendChild(canvas);
+      var popup = createPopupWindow(title, contentBox, null, { width: 500, height: 400, topOffset: 80, leftOffset: 0, minW: 320, minH: 280 });
+      var ctx = canvas.getContext('2d');
+      var drawing = false;
+      var lastX = 0, lastY = 0;
+      var currentTool = 'pencil';
+      var eraserSize = 20;
+      function resizeCanvas() {
+        if (!contentBox || !canvas || !toolbar || !popup || !popup.win) return;
+        var winR = popup.win.getBoundingClientRect();
+        var titleBarH = 44;
+        var pad = 16;
+        var toolbarH = toolbar.getBoundingClientRect().height || 44;
+        var w = Math.max(100, Math.floor((winR.width || 500) - pad * 2));
+        var h = Math.max(100, Math.floor((winR.height || 400) - titleBarH - pad * 2 - toolbarH));
+        var oldW = canvas.width;
+        var oldH = canvas.height;
+        if (canvas.width !== w || canvas.height !== h) {
+          var imageData = null;
+          if (oldW > 0 && oldH > 0) {
+            try {
+              imageData = ctx.getImageData(0, 0, oldW, oldH);
+            } catch (err) {}
+          }
+          canvas.width = w;
+          canvas.height = h;
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
+          ctx.fillStyle = bg;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          if (imageData && imageData.data) {
+            var temp = document.createElement('canvas');
+            temp.width = oldW;
+            temp.height = oldH;
+            var tCtx = temp.getContext('2d');
+            tCtx.putImageData(imageData, 0, 0);
+            ctx.drawImage(temp, 0, 0, oldW, oldH, 0, 0, w, h);
+          }
+        }
+      }
+      function draw(x, y) {
+        if (!drawing) return;
+        ctx.lineCap = 'round';
+        if (currentTool === 'eraser') {
+          ctx.strokeStyle = bg;
+          ctx.lineWidth = eraserSize;
+        } else {
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = 2;
+        }
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        lastX = x;
+        lastY = y;
+      }
+      function getPos(e) {
+        var r = canvas.getBoundingClientRect();
+        var scaleX = canvas.width / r.width;
+        var scaleY = canvas.height / r.height;
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+      }
+      clearBtn.addEventListener('click', function() {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      });
+      pencilBtn.addEventListener('click', function() {
+        currentTool = 'pencil';
+        pencilBtn.classList.add('scratch-tool--active');
+        eraserBtn.classList.remove('scratch-tool--active');
+      });
+      eraserBtn.addEventListener('click', function() {
+        currentTool = 'eraser';
+        eraserBtn.classList.add('scratch-tool--active');
+        pencilBtn.classList.remove('scratch-tool--active');
+      });
+      canvas.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        var p = getPos(e);
+        lastX = p.x; lastY = p.y;
+        drawing = true;
+      });
+      canvas.addEventListener('mousemove', function(e) {
+        e.preventDefault();
+        draw(getPos(e).x, getPos(e).y);
+      });
+      canvas.addEventListener('mouseup', function() { drawing = false; });
+      canvas.addEventListener('mouseleave', function() { drawing = false; });
+      canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        var p = getPos(e);
+        lastX = p.x; lastY = p.y;
+        drawing = true;
+      }, { passive: false });
+      canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        draw(getPos(e).x, getPos(e).y);
+      }, { passive: false });
+      canvas.addEventListener('touchend', function() { drawing = false; });
+      requestAnimationFrame(function() {
+        resizeCanvas();
+        var ro = new ResizeObserver(function() { resizeCanvas(); });
+        if (popup.win) ro.observe(popup.win);
+        setTimeout(resizeCanvas, 0);
+        setTimeout(resizeCanvas, 50);
+        setTimeout(resizeCanvas, 200);
+      });
       input.value = '';
       hideTabOptions();
       return;
