@@ -216,6 +216,21 @@ classes: [google-only]
     'history',
     'ip',
     'clear',
+    'calc',
+    'convert',
+    'solve',
+    'prime',
+    'divisor',
+    'div',
+    'gcd',
+    'lcm',
+    'timer',
+    'timer -s',
+    'clock',
+    'date',
+    'calculator',
+    'calendar',
+    'calender',
   ];
 
   function getCompletions(prefix) {
@@ -243,6 +258,201 @@ classes: [google-only]
   function hideTabOptions() {
     if (tabOptions) tabOptions.classList.remove('terminal-tab-options-visible');
     if (tabOptions) tabOptions.innerHTML = '';
+  }
+
+  function safeEvalExpr(expr) {
+    expr = expr.replace(/\s+/g, ' ').trim();
+    var s = expr.replace(/\b(sqrt|sin|cos|tan|log|exp|pow|abs|round|floor|ceil)\s*\(/gi, 'Math.$1(');
+    s = s.replace(/\bPI\b/g, 'Math.PI').replace(/\bE\b/g, 'Math.E');
+    var safe = s.replace(/Math\.[a-zA-Z]+/g, '');
+    if (!/^[\d+\-*/().\s%]*$/.test(safe)) return null;
+    try {
+      return new Function('return (' + s + ')')();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var LENGTH_TO_M = { m: 1, meter: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, mile: 1609.344, miles: 1609.344, ft: 0.3048, foot: 0.3048, feet: 0.3048, in: 0.0254, inch: 0.0254, inches: 0.0254, yd: 0.9144, yard: 0.9144 };
+  var MASS_TO_KG = { kg: 1, g: 0.001, gram: 0.001, lb: 0.453592, lbs: 0.453592, pound: 0.453592, pounds: 0.453592, oz: 0.0283495 };
+  var TIME_TO_S = { s: 1, sec: 1, second: 1, seconds: 1, min: 60, minute: 60, minutes: 60, h: 3600, hr: 3600, hour: 3600, hours: 3600, d: 86400, day: 86400, days: 86400, week: 604800, weeks: 604800, year: 31557600, years: 31557600 };
+  function convertUnits(num, unit1, unit2) {
+    var n = parseFloat(num);
+    if (isNaN(n)) return null;
+    unit1 = (unit1 || '').toLowerCase().replace(/celcius/, 'celsius');
+    unit2 = (unit2 || '').toLowerCase().replace(/celcius/, 'celsius');
+    var tempUnits = ['c', 'f', 'k', 'celsius', 'fahrenheit', 'kelvin'];
+    var u1t = tempUnits.indexOf(unit1) >= 0;
+    var u2t = tempUnits.indexOf(unit2) >= 0;
+    if (u1t && u2t) {
+      var toC = function(v, u) {
+        if (u === 'c' || u === 'celsius') return v;
+        if (u === 'f' || u === 'fahrenheit') return (v - 32) * 5 / 9;
+        if (u === 'k' || u === 'kelvin') return v - 273.15;
+        return v;
+      };
+      var fromC = function(v, u) {
+        if (u === 'c' || u === 'celsius') return v;
+        if (u === 'f' || u === 'fahrenheit') return v * 9 / 5 + 32;
+        if (u === 'k' || u === 'kelvin') return v + 273.15;
+        return v;
+      };
+      var c = toC(n, unit1);
+      return fromC(c, unit2);
+    }
+    if (LENGTH_TO_M[unit1] !== undefined && LENGTH_TO_M[unit2] !== undefined) {
+      var meters = n * LENGTH_TO_M[unit1];
+      return meters / LENGTH_TO_M[unit2];
+    }
+    if (MASS_TO_KG[unit1] !== undefined && MASS_TO_KG[unit2] !== undefined) {
+      var kg = n * MASS_TO_KG[unit1];
+      return kg / MASS_TO_KG[unit2];
+    }
+    if (TIME_TO_S[unit1] !== undefined && TIME_TO_S[unit2] !== undefined) {
+      var secs = n * TIME_TO_S[unit1];
+      return secs / TIME_TO_S[unit2];
+    }
+    return null;
+  }
+
+  function solveQuadratic(a, b, c) {
+    a = parseFloat(a); b = parseFloat(b); c = parseFloat(c);
+    if (isNaN(a) || isNaN(b) || isNaN(c)) return null;
+    if (Math.abs(a) < 1e-10) {
+      if (Math.abs(b) < 1e-10) return null;
+      return [-c / b];
+    }
+    var d = b * b - 4 * a * c;
+    if (d < -1e-10) return [];
+    if (d < 1e-10) return [-b / (2 * a)];
+    var s = Math.sqrt(d);
+    return [(-b + s) / (2 * a), (-b - s) / (2 * a)];
+  }
+
+  function isPrime(n) {
+    n = Math.floor(Number(n));
+    if (n < 2 || !isFinite(n)) return false;
+    if (n === 2) return true;
+    if (n % 2 === 0) return false;
+    for (var i = 3; i * i <= n; i += 2) {
+      if (n % i === 0) return false;
+    }
+    return true;
+  }
+
+  function getDivisors(n) {
+    n = Math.floor(Math.abs(Number(n)));
+    if (n === 0) return [];
+    var out = [];
+    for (var i = 1; i * i <= n; i++) {
+      if (n % i === 0) {
+        out.push(i);
+        if (i !== n / i) out.push(n / i);
+      }
+    }
+    out.sort(function(a, b) { return a - b; });
+    return out;
+  }
+
+  function gcd(a, b) {
+    a = Math.floor(Math.abs(Number(a)));
+    b = Math.floor(Math.abs(Number(b)));
+    while (b !== 0) {
+      var t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+
+  function lcm(a, b) {
+    a = Math.floor(Math.abs(Number(a)));
+    b = Math.floor(Math.abs(Number(b)));
+    if (a === 0 && b === 0) return 0;
+    return (a * b) / gcd(a, b);
+  }
+
+  function createPopupWindow(title, contentEl, onClose) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'popup-wrapper';
+    var win = document.createElement('div');
+    win.className = 'popup-window';
+    var titlebar = document.createElement('div');
+    titlebar.className = 'popup-titlebar';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'popup-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.type = 'button';
+    var titleSpan = document.createElement('span');
+    titleSpan.className = 'popup-title';
+    titleSpan.textContent = title;
+    var content = document.createElement('div');
+    content.className = 'popup-content';
+    if (contentEl) content.appendChild(contentEl);
+    var resizeHandle = document.createElement('div');
+    resizeHandle.className = 'popup-resize-handle';
+    titlebar.appendChild(closeBtn);
+    titlebar.appendChild(titleSpan);
+    win.appendChild(titlebar);
+    win.appendChild(content);
+    win.appendChild(resizeHandle);
+    wrapper.appendChild(win);
+    var minW = 200, minH = 120;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    wrapper.style.left = Math.max(20, (vw - 280) / 2 + 80) + 'px';
+    wrapper.style.top = Math.max(20, (vh - 160) / 2 - 40) + 'px';
+    closeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof onClose === 'function') onClose();
+      wrapper.remove();
+    });
+    var dragStartX, dragStartY, dragStartLeft, dragStartTop;
+    titlebar.addEventListener('mousedown', function(e) {
+      if (e.target === closeBtn) return;
+      e.preventDefault();
+      var r = wrapper.getBoundingClientRect();
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartLeft = r.left;
+      dragStartTop = r.top;
+      function move(ev) {
+        var dx = ev.clientX - dragStartX;
+        var dy = ev.clientY - dragStartY;
+        wrapper.style.left = Math.max(0, dragStartLeft + dx) + 'px';
+        wrapper.style.top = Math.max(0, dragStartTop + dy) + 'px';
+      }
+      function stop() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', stop);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', stop);
+    });
+    var resizeStartX, resizeStartY, resizeStartW, resizeStartH;
+    resizeHandle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var r = win.getBoundingClientRect();
+      resizeStartX = e.clientX;
+      resizeStartY = e.clientY;
+      resizeStartW = r.width;
+      resizeStartH = r.height;
+      function move(ev) {
+        var dw = ev.clientX - resizeStartX;
+        var dh = ev.clientY - resizeStartY;
+        win.style.width = Math.max(minW, resizeStartW + dw) + 'px';
+        win.style.height = Math.max(minH, resizeStartH + dh) + 'px';
+      }
+      function stop() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', stop);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', stop);
+    });
+    document.body.appendChild(wrapper);
+    return { wrapper: wrapper, win: win, content: content };
   }
 
   input.addEventListener('keydown', function(e) {
@@ -307,6 +517,455 @@ classes: [google-only]
     var historyLMatch = /^history\s+-l\s+(\d+)\s*$/.exec(raw);
     if (/^clear\s*$/.test(raw)) {
       if (outputEl) outputEl.innerHTML = '';
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var timerSecondsMatch = /^timer\s+-s\s+(\d+)\s*$/.exec(raw);
+    var timerMinutesMatch = /^timer\s+(\d+)\s*$/.exec(raw);
+    if (timerSecondsMatch || timerMinutesMatch) {
+      var totalSeconds = timerSecondsMatch
+        ? Math.max(1, parseInt(timerSecondsMatch[1], 10))
+        : Math.max(1, parseInt(timerMinutesMatch[1], 10)) * 60;
+      var isSeconds = !!timerSecondsMatch;
+      var remainingSeconds = totalSeconds;
+      var paused = false;
+      var intervalId = null;
+      function formatTime(s) {
+        var m = Math.floor(s / 60);
+        var sec = s % 60;
+        return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+      }
+      function setParticlesPaused() {
+        if (window.updateParticleColors) window.updateParticleColors('single', '#3333cc');
+      }
+      function setParticlesFinished() {
+        if (window.updateParticleColors) window.updateParticleColors('single', '#cc3333');
+      }
+      function setParticlesDefault() {
+        if (window.updateParticleColors) window.updateParticleColors('default');
+      }
+      function particleColorFromProgress(ratio) {
+        var r, g, b;
+        if (ratio > 0.5) {
+          var t = (ratio - 0.5) * 2;
+          r = Math.round(201 + (72 - 201) * t);
+          g = Math.round(162 + (146 - 162) * t);
+          b = Math.round(39 + (72 - 39) * t);
+        } else {
+          var t = ratio * 2;
+          r = Math.round(204 + (201 - 204) * t);
+          g = Math.round(51 + (162 - 51) * t);
+          b = Math.round(51 + (39 - 51) * t);
+        }
+        r = Math.max(0, Math.min(255, r));
+        g = Math.max(0, Math.min(255, g));
+        b = Math.max(0, Math.min(255, b));
+        return '#' + [r, g, b].map(function(x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      }
+      function setParticlesFromProgress() {
+        var ratio = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
+        if (window.updateParticleColors) window.updateParticleColors('single', particleColorFromProgress(ratio));
+      }
+      var contentBox = document.createElement('div');
+      contentBox.className = 'timer-popup';
+      var displayEl = document.createElement('div');
+      displayEl.className = 'timer-display';
+      displayEl.textContent = formatTime(remainingSeconds);
+      var progressTrack = document.createElement('div');
+      progressTrack.className = 'timer-progress-track';
+      var progressFill = document.createElement('div');
+      progressFill.className = 'timer-progress-fill';
+      progressFill.style.width = (remainingSeconds / totalSeconds * 100) + '%';
+      progressTrack.appendChild(progressFill);
+      function updateProgress() {
+        var pct = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
+        progressFill.style.width = pct + '%';
+        progressFill.classList.remove('timer-low', 'timer-critical');
+        if (pct <= 25) progressFill.classList.add('timer-critical');
+        else if (pct <= 50) progressFill.classList.add('timer-low');
+      }
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'timer-btn';
+      btn.textContent = 'Pause';
+      setParticlesFromProgress();
+      function tick() {
+        if (paused) return;
+        remainingSeconds--;
+        displayEl.textContent = formatTime(remainingSeconds);
+        updateProgress();
+        setParticlesFromProgress();
+        if (remainingSeconds <= 0) {
+          clearInterval(intervalId);
+          intervalId = null;
+          displayEl.textContent = "Time's up!";
+          displayEl.classList.add('timer-finished');
+          btn.disabled = true;
+          btn.textContent = 'Done';
+          setParticlesFinished();
+        }
+      }
+      intervalId = setInterval(tick, 1000);
+      btn.addEventListener('click', function() {
+        if (remainingSeconds <= 0) return;
+        if (paused) {
+          paused = false;
+          btn.textContent = 'Pause';
+          btn.disabled = false;
+          setParticlesFromProgress();
+          intervalId = setInterval(tick, 1000);
+        } else {
+          paused = true;
+          clearInterval(intervalId);
+          intervalId = null;
+          btn.textContent = 'Resume';
+          setParticlesPaused();
+        }
+      });
+      var actionsWrap = document.createElement('div');
+      actionsWrap.className = 'timer-actions';
+      actionsWrap.appendChild(btn);
+      contentBox.appendChild(displayEl);
+      contentBox.appendChild(progressTrack);
+      contentBox.appendChild(actionsWrap);
+      createPopupWindow('Timer', contentBox, function() {
+        if (intervalId) clearInterval(intervalId);
+        setParticlesDefault();
+      });
+      var msg = isSeconds
+        ? ('Timer set for ' + totalSeconds + ' second' + (totalSeconds !== 1 ? 's' : ''))
+        : ('Timer set for ' + (totalSeconds / 60) + ' minute' + (totalSeconds !== 60 ? 's' : ''));
+      appendOutput(raw, [msg]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^clock\s*$/.test(raw)) {
+      var isAnalog = false;
+      var clockIntervalId = null;
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-clock';
+      var digitalDiv = document.createElement('div');
+      digitalDiv.className = 'clock-digital';
+      var analogDiv = document.createElement('div');
+      analogDiv.className = 'clock-analog';
+      analogDiv.style.display = 'none';
+      var canvas = document.createElement('canvas');
+      canvas.width = 160;
+      canvas.height = 160;
+      analogDiv.appendChild(canvas);
+      function updateDigital() {
+        var d = new Date();
+        var h = d.getHours();
+        var m = d.getMinutes();
+        var s = d.getSeconds();
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        digitalDiv.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s + ' ' + ampm;
+      }
+      function updateAnalog() {
+        var d = new Date();
+        var ctx = canvas.getContext('2d');
+        var cx = 80, cy = 80, r = 70;
+        ctx.clearRect(0, 0, 160, 160);
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        for (var i = 0; i < 12; i++) {
+          var a = (i * 30 - 90) * Math.PI / 180;
+          var r1 = r - 8, r2 = r;
+          ctx.beginPath();
+          ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a));
+          ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a));
+          ctx.stroke();
+        }
+        var sec = d.getSeconds(), min = d.getMinutes(), hr = d.getHours() % 12 + min / 60;
+        var secA = (sec * 6 - 90) * Math.PI / 180;
+        var minA = (min * 6 - 90) * Math.PI / 180;
+        var hrA = (hr * 30 - 90) * Math.PI / 180;
+        ctx.strokeStyle = '#489248';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 45 * Math.cos(hrA), cy + 45 * Math.sin(hrA));
+        ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 55 * Math.cos(minA), cy + 55 * Math.sin(minA));
+        ctx.stroke();
+        ctx.strokeStyle = '#cc3333';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 60 * Math.cos(secA), cy + 60 * Math.sin(secA));
+        ctx.stroke();
+      }
+      function tick() {
+        if (isAnalog) updateAnalog(); else updateDigital();
+      }
+      updateDigital();
+      clockIntervalId = setInterval(tick, 1000);
+      var toggleBtn = document.createElement('button');
+      toggleBtn.className = 'timer-btn';
+      toggleBtn.style.marginTop = '12px';
+      toggleBtn.textContent = 'Analog';
+      toggleBtn.addEventListener('click', function() {
+        isAnalog = !isAnalog;
+        digitalDiv.style.display = isAnalog ? 'none' : 'block';
+        analogDiv.style.display = isAnalog ? 'block' : 'none';
+        toggleBtn.textContent = isAnalog ? 'Digital' : 'Analog';
+        tick();
+      });
+      contentBox.appendChild(digitalDiv);
+      contentBox.appendChild(analogDiv);
+      contentBox.appendChild(toggleBtn);
+      createPopupWindow('Clock', contentBox, function() { if (clockIntervalId) clearInterval(clockIntervalId); });
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^date\s*$/.test(raw)) {
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-date';
+      var format = 'DD-MM-YYYY';
+      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      function ordinal(n) {
+        var s = n % 100;
+        if (s >= 11 && s <= 13) return n + 'th';
+        if (n % 10 === 1) return n + 'st';
+        if (n % 10 === 2) return n + 'nd';
+        if (n % 10 === 3) return n + 'rd';
+        return n + 'th';
+      }
+      function formatDate(fmt) {
+        var d = new Date();
+        var DD = ('0' + d.getDate()).slice(-2);
+        var MM = ('0' + (d.getMonth() + 1)).slice(-2);
+        var YYYY = d.getFullYear();
+        var Month = MONTHS[d.getMonth()];
+        var D = d.getDate();
+        var Day = DAYS[d.getDay()];
+        var Dth = ordinal(D);
+        if (fmt === 'DD-MM-YYYY') return DD + '-' + MM + '-' + YYYY;
+        if (fmt === 'MM-DD-YYYY') return MM + '-' + DD + '-' + YYYY;
+        if (fmt === 'YYYY-MM-DD') return YYYY + '-' + MM + '-' + DD;
+        if (fmt === 'Month D, YYYY') return Month + ' ' + D + ', ' + YYYY;
+        if (fmt === 'D Month YYYY') return D + ' ' + Month + ' ' + YYYY;
+        if (fmt === 'Weekday Dth Month') return Day + ' ' + Dth + ' ' + Month;
+        if (fmt === 'Weekday, Month Dth') return Day + ', ' + Month + ' ' + Dth;
+        if (fmt === 'Weekday, Month Dth YYYY') return Day + ', ' + Month + ' ' + Dth + ', ' + YYYY;
+        if (fmt === 'Weekday D Month YYYY') return Day + ' ' + D + ' ' + Month + ' ' + YYYY;
+        return DD + '-' + MM + '-' + YYYY;
+      }
+      var displayEl = document.createElement('div');
+      displayEl.className = 'date-display';
+      displayEl.textContent = formatDate(format);
+      var select = document.createElement('select');
+      select.className = 'date-format-select';
+      [
+        ['DD-MM-YYYY', 'DD-MM-YYYY'],
+        ['MM-DD-YYYY', 'MM-DD-YYYY'],
+        ['YYYY-MM-DD', 'YYYY-MM-DD'],
+        ['Month D, YYYY', 'Month D, YYYY'],
+        ['D Month YYYY', 'D Month YYYY'],
+        ['Weekday Dth Month', 'Tuesday 15th March'],
+        ['Weekday, Month Dth', 'Tuesday, March 15th'],
+        ['Weekday, Month Dth YYYY', 'Tuesday, March 15th 2026'],
+        ['Weekday D Month YYYY', 'Tuesday 15 March 2026']
+      ].forEach(function(opt) {
+        var o = document.createElement('option');
+        o.value = opt[0];
+        o.textContent = opt[1];
+        if (opt[0] === format) o.selected = true;
+        select.appendChild(o);
+      });
+      select.addEventListener('change', function() {
+        format = select.value;
+        displayEl.textContent = formatDate(format);
+      });
+      contentBox.appendChild(displayEl);
+      contentBox.appendChild(select);
+      createPopupWindow('Date', contentBox);
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^calculator\s*$/.test(raw)) {
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-calc';
+      var display = document.createElement('input');
+      display.type = 'text';
+      display.readOnly = true;
+      display.className = 'calc-display';
+      display.value = '0';
+      var displayValue = '0';
+      var values = [];
+      var ops = [];
+      function updateDisplay() { display.value = displayValue; }
+      function evaluate() {
+        if (values.length === 0) return;
+        var v = values.slice();
+        var o = ops.slice();
+        var i;
+        while ((i = o.indexOf('*')) >= 0 || (i = o.indexOf('/')) >= 0) {
+          if (i < 0) i = o.indexOf('/');
+          var a = v[i], b = v[i + 1];
+          if (o[i] === '*') v[i] = a * b; else v[i] = b !== 0 ? a / b : NaN;
+          v.splice(i + 1, 1);
+          o.splice(i, 1);
+        }
+        while (o.length > 0) {
+          var a = v[0], b = v[1];
+          if (o[0] === '+') v[0] = a + b; else v[0] = a - b;
+          v.splice(1, 1);
+          o.splice(0, 1);
+        }
+        return v[0];
+      }
+      var btnValues = [['7', '8', '9', '/'], ['4', '5', '6', '*'], ['1', '2', '3', '-'], ['0', '.', '=', '+'], ['C']];
+      var grid = document.createElement('div');
+      grid.className = 'calc-grid';
+      btnValues.forEach(function(row) {
+        row.forEach(function(v) {
+          var btn = document.createElement('button');
+          btn.className = 'calc-btn';
+          btn.textContent = v;
+          if (v === 'C') btn.classList.add('calc-btn-c');
+          btn.addEventListener('click', function() {
+            if (v === 'C') {
+              displayValue = '0';
+              values = [];
+              ops = [];
+              updateDisplay();
+              return;
+            }
+            if (v === '=') {
+              var num = parseFloat(displayValue);
+              if (isNaN(num)) { updateDisplay(); return; }
+              values.push(num);
+              if (values.length === 1 && ops.length === 0) {
+                displayValue = String(values[0]);
+                values = [];
+              } else if (values.length === ops.length + 1) {
+                var result = evaluate();
+                if (isNaN(result)) displayValue = 'Error';
+                else displayValue = String(result);
+                values = [];
+                ops = [];
+              }
+              updateDisplay();
+              return;
+            }
+            if (['+', '-', '*', '/'].indexOf(v) >= 0) {
+              var num = parseFloat(displayValue);
+              if (!isNaN(num)) {
+                values.push(num);
+                ops.push(v);
+              }
+              displayValue = '0';
+              return;
+            }
+            if (v === '.' && displayValue.indexOf('.') >= 0) return;
+            if (displayValue === '0' && v !== '.') displayValue = v; else displayValue += v;
+            updateDisplay();
+          });
+          grid.appendChild(btn);
+        });
+      });
+      contentBox.appendChild(display);
+      contentBox.appendChild(grid);
+      createPopupWindow('Calculator', contentBox);
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^calendar\s*$/.test(raw) || /^calender\s*$/.test(raw)) {
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-calendar';
+      var d = new Date();
+      var currentMonth = d.getMonth();
+      var currentYear = d.getFullYear();
+      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var titleEl = document.createElement('div');
+      titleEl.className = 'calendar-title';
+      var gridEl = document.createElement('div');
+      gridEl.className = 'calendar-grid';
+      function render() {
+        titleEl.textContent = MONTHS[currentMonth] + ' ' + currentYear;
+        gridEl.innerHTML = '';
+        var header = document.createElement('div');
+        header.className = 'calendar-header';
+        ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(function(day) {
+          var c = document.createElement('span');
+          c.className = 'calendar-cell calendar-head';
+          c.textContent = day;
+          header.appendChild(c);
+        });
+        gridEl.appendChild(header);
+        var firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        var row = document.createElement('div');
+        row.className = 'calendar-row';
+        for (var i = 0; i < firstDay; i++) {
+          var cell = document.createElement('span');
+          cell.className = 'calendar-cell calendar-empty';
+          cell.textContent = '\u00a0';
+          row.appendChild(cell);
+        }
+        for (var day = 1; day <= daysInMonth; day++) {
+          if (row.children.length === 7) {
+            gridEl.appendChild(row);
+            row = document.createElement('div');
+            row.className = 'calendar-row';
+          }
+          var cell = document.createElement('span');
+          cell.className = 'calendar-cell';
+          cell.textContent = day;
+          row.appendChild(cell);
+        }
+        while (row.children.length < 7) {
+          var cell = document.createElement('span');
+          cell.className = 'calendar-cell calendar-empty';
+          cell.textContent = '\u00a0';
+          row.appendChild(cell);
+        }
+        gridEl.appendChild(row);
+      }
+      render();
+      var nav = document.createElement('div');
+      nav.className = 'calendar-nav';
+      var prevBtn = document.createElement('button');
+      prevBtn.className = 'timer-btn';
+      prevBtn.textContent = '\u2190';
+      prevBtn.addEventListener('click', function() {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        render();
+      });
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'timer-btn';
+      nextBtn.textContent = '\u2192';
+      nextBtn.addEventListener('click', function() {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        render();
+      });
+      nav.appendChild(prevBtn);
+      nav.appendChild(nextBtn);
+      contentBox.appendChild(titleEl);
+      contentBox.appendChild(gridEl);
+      contentBox.appendChild(nav);
+      createPopupWindow('Calendar', contentBox);
+      appendOutput(raw, []);
       input.value = '';
       hideTabOptions();
       return;
@@ -422,6 +1081,85 @@ classes: [google-only]
     if (echoMatch) {
       appendOutput(raw, []);
       appendOutput('echo ' + echoMatch[1], [echoMatch[1]]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var calcMatch = /^calc\s+(.+)$/.exec(raw);
+    if (calcMatch) {
+      var ex = calcMatch[1].trim();
+      var val = safeEvalExpr(ex);
+      if (val === null || val === undefined) {
+        appendOutput(raw, ['Invalid expression']);
+      } else {
+        appendOutput(raw, [String(val)]);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var convertMatch = /^convert\s+([\d.-]+)\s+(\S+)\s+(\S+)\s*$/.exec(raw);
+    if (convertMatch) {
+      var conv = convertUnits(convertMatch[1], convertMatch[2], convertMatch[3]);
+      if (conv === null) {
+        appendOutput(raw, ['Cannot convert those units. Use length (m, km, cm, mi, ft, in), mass (kg, g, lb, oz), temp (C, F, K), or time (s, min, h, d, week, year).']);
+      } else {
+        appendOutput(raw, [convertMatch[1] + ' ' + convertMatch[2] + ' = ' + conv + ' ' + convertMatch[3]]);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var solveMatch = /^solve\s+(.+)$/.exec(raw);
+    if (solveMatch) {
+      var parts = solveMatch[1].trim().split(/\s+/);
+      if (parts.length >= 3) {
+        var a = parseFloat(parts[0]), b = parseFloat(parts[1]), c = parseFloat(parts[2]);
+        var roots = solveQuadratic(a, b, c);
+        if (roots === null) {
+          appendOutput(raw, ['Invalid coefficients']);
+        } else if (roots.length === 0) {
+          appendOutput(raw, ['No real roots']);
+        } else if (roots.length === 1) {
+          appendOutput(raw, ['x = ' + roots[0]]);
+        } else {
+          appendOutput(raw, ['x = ' + roots[0] + ', ' + roots[1]]);
+        }
+      } else {
+        appendOutput(raw, ['Usage: solve a b c  (for ax² + bx + c = 0)']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var primeMatch = /^prime\s+(\d+)\s*$/.exec(raw);
+    if (primeMatch) {
+      var num = parseInt(primeMatch[1], 10);
+      appendOutput(raw, [num + ' is ' + (isPrime(num) ? 'prime' : 'not prime')]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var divMatch = /^(?:div|divisor)\s+(\d+)\s*$/.exec(raw);
+    if (divMatch) {
+      var divs = getDivisors(parseInt(divMatch[1], 10));
+      appendOutput(raw, [divs.length ? divs.join(', ') : 'none']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var gcdMatch = /^gcd\s+(\d+)\s+(\d+)\s*$/.exec(raw);
+    if (gcdMatch) {
+      var g = gcd(parseInt(gcdMatch[1], 10), parseInt(gcdMatch[2], 10));
+      appendOutput(raw, ['gcd = ' + g]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var lcmMatch = /^lcm\s+(\d+)\s+(\d+)\s*$/.exec(raw);
+    if (lcmMatch) {
+      var l = lcm(parseInt(lcmMatch[1], 10), parseInt(lcmMatch[2], 10));
+      appendOutput(raw, ['lcm = ' + l]);
       input.value = '';
       hideTabOptions();
       return;
