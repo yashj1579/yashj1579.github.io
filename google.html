@@ -1,0 +1,530 @@
+---
+layout: default
+permalink: /google/
+title: Google
+classes: [google-only]
+---
+
+<div class="google-page-full">
+  <canvas id="google-particle-canvas"></canvas>
+</div>
+
+<div class="terminal-drag-wrapper" id="terminal-drag-wrapper">
+  <div class="terminal-window" id="terminal-window">
+    <div class="terminal-titlebar" id="terminal-titlebar">yashjain — -zsh</div>
+    <div class="terminal-search">
+      <div class="terminal-output" id="terminal-output"></div>
+      <div class="terminal-tab-options" id="terminal-tab-options"></div>
+      <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get">
+        <span class="terminal-prompt">yashjain@google $</span>
+        <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off">
+      </form>
+    </div>
+    <div class="terminal-resize-handle" id="terminal-resize-handle"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('google-particle-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var width, height;
+  var particles = [];
+  var mouseX = -1000, mouseY = -1000;
+  var influenceRadius = 75;
+  var forceFactor = 75;
+  var defaultPalette = [
+    { r: 230, g: 80, b: 60 },
+    { r: 240, g: 120, b: 50 },
+    { r: 250, g: 200, b: 80 }
+  ];
+  var currentPalette = defaultPalette.slice();
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    var cols = Math.max(2, Math.floor(width / 28));
+    var rows = Math.max(2, Math.floor(height / 28));
+    particles = [];
+    for (var i = 0; i < rows; i++) {
+      for (var j = 0; j < cols; j++) {
+        particles.push({
+          x: (j + 0.5) * (width / cols),
+          y: (i + 0.5) * (height / rows),
+          baseX: (j + 0.5) * (width / cols),
+          baseY: (i + 0.5) * (height / rows),
+          colorIndex: (i + j) % currentPalette.length
+        });
+      }
+    }
+  }
+
+  function anim() {
+    if (!ctx || !width || !height) return requestAnimationFrame(anim);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, width, height);
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var dx = mouseX - p.x;
+      var dy = mouseY - p.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < influenceRadius && dist > 0) {
+        var f = (1 - dist / influenceRadius) * forceFactor / 100;
+        p.x = p.x - (dx / dist) * f;
+        p.y = p.y - (dy / dist) * f;
+      } else {
+        p.x = p.x + (p.baseX - p.x) * 0.08;
+        p.y = p.y + (p.baseY - p.y) * 0.08;
+      }
+      var c = currentPalette[p.colorIndex % currentPalette.length];
+      ctx.fillStyle = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(anim);
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+  document.addEventListener('mouseleave', function() {
+    mouseX = -1000;
+    mouseY = -1000;
+  });
+
+  window.updateParticleColors = function(mode) {
+    if (mode === 'reset' || mode === 'default') {
+      currentPalette = defaultPalette.slice();
+      return;
+    }
+    if (mode === 'single' && arguments[1]) {
+      var hex = arguments[1].replace(/^#/, '');
+      var r = parseInt(hex.slice(0, 2), 16);
+      var g = parseInt(hex.slice(2, 4), 16);
+      var b = parseInt(hex.slice(4, 6), 16);
+      currentPalette = [{ r: r, g: g, b: b }];
+      return;
+    }
+    if (mode === 'gradient' && arguments.length >= 4) {
+      currentPalette = [];
+      for (var i = 1; i <= 3; i++) {
+        var h = arguments[i].replace(/^#/, '');
+        currentPalette.push({
+          r: parseInt(h.slice(0, 2), 16),
+          g: parseInt(h.slice(2, 4), 16),
+          b: parseInt(h.slice(4, 6), 16)
+        });
+      }
+    }
+  };
+
+  window.setParticleRadius = function(r) {
+    influenceRadius = Math.max(0, Number(r));
+  };
+
+  window.setParticleForce = function(f) {
+    forceFactor = Math.max(0, Number(f));
+  };
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(anim);
+})();
+</script>
+
+<script>
+(function() {
+  var form = document.getElementById('terminal-form');
+  var input = document.getElementById('terminal-input');
+  var outputEl = document.getElementById('terminal-output');
+  var tabOptions = document.getElementById('terminal-tab-options');
+  var win = document.getElementById('terminal-window');
+  var wrapper = document.getElementById('terminal-drag-wrapper');
+  var titlebar = document.getElementById('terminal-titlebar');
+  var resizeHandle = document.getElementById('terminal-resize-handle');
+
+  function appendOutput(cmdLine, outputLines) {
+    if (!outputEl) return;
+    var cmdDiv = document.createElement('div');
+    cmdDiv.className = 'terminal-output-line';
+    cmdDiv.textContent = 'yashjain@google $ ' + cmdLine;
+    outputEl.appendChild(cmdDiv);
+    (outputLines || []).forEach(function(line) {
+      var out = document.createElement('div');
+      out.className = 'terminal-output-line terminal-output-result';
+      out.textContent = line;
+      outputEl.appendChild(out);
+    });
+    outputEl.scrollTop = outputEl.scrollHeight;
+  }
+
+  function appendResultLine(text) {
+    if (!outputEl) return;
+    var out = document.createElement('div');
+    out.className = 'terminal-output-line terminal-output-result';
+    out.textContent = text;
+    outputEl.appendChild(out);
+    outputEl.scrollTop = outputEl.scrollHeight;
+  }
+
+  var dragStartX, dragStartY, dragStartLeft, dragStartTop;
+  var resizeStartX, resizeStartY, resizeStartW, resizeStartH;
+  var minW = 400, minH = 280;
+
+  var COMMANDS = [
+    'color',
+    'color reset',
+    'color default',
+    'color gradient',
+    'color #rrggbb',
+    'whoami',
+    'radius',
+    'distort',
+    'force',
+    'mail',
+    'github',
+    'linkedin',
+    'drive',
+    'docs',
+    'slides',
+    'sheets',
+    'website',
+    'echo',
+    'history',
+    'ip',
+  ];
+
+  function getCompletions(prefix) {
+    prefix = (prefix || '').toLowerCase();
+    var out = [];
+    for (var i = 0; i < COMMANDS.length && out.length < 5; i++) {
+      if (COMMANDS[i].toLowerCase().indexOf(prefix) === 0) out.push(COMMANDS[i]);
+    }
+    return out;
+  }
+
+  function showTabOptions(completions) {
+    tabOptions.innerHTML = '';
+    if (!tabOptions) return;
+    if (completions.length === 0) return;
+    completions.forEach(function(c) {
+      var line = document.createElement('div');
+      line.className = 'terminal-tab-option';
+      line.textContent = c;
+      tabOptions.appendChild(line);
+    });
+    tabOptions.classList.add('terminal-tab-options-visible');
+  }
+
+  function hideTabOptions() {
+    if (tabOptions) tabOptions.classList.remove('terminal-tab-options-visible');
+    if (tabOptions) tabOptions.innerHTML = '';
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      var val = input.value.trim();
+      var completions = getCompletions(val);
+      if (completions.length === 1) {
+        var c = completions[0];
+        input.value = c + (c === 'color' ? ' ' : '');
+        hideTabOptions();
+      } else if (completions.length > 1) {
+        showTabOptions(completions.slice(0, 5));
+      } else {
+        hideTabOptions();
+      }
+    } else {
+      hideTabOptions();
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var raw = input.value.trim();
+    var displayLine = raw;
+    var forceSearch = false;
+    if (raw.indexOf('/') === 0) {
+      forceSearch = true;
+      raw = raw.slice(1).trim();
+    }
+    if (forceSearch) {
+      appendOutput(displayLine, []);
+      input.value = raw;
+      form.submit();
+      return;
+    }
+    var historyMatch = /^history\s*$/.exec(raw);
+    var historyLMatch = /^history\s+-l\s+(\d+)\s*$/.exec(raw);
+    if (historyMatch) {
+      var len = typeof window.history !== 'undefined' && typeof window.history.length === 'number' ? window.history.length : 0;
+      appendOutput('history', [
+        'Browser history is private — sites cannot read your visited URLs.',
+        'This tab\'s session length: ' + len + ' entries.'
+      ]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (historyLMatch) {
+      var n = parseInt(historyLMatch[1], 10);
+      var len = typeof window.history !== 'undefined' && typeof window.history.length === 'number' ? window.history.length : 0;
+      var show = isNaN(n) || n < 1 ? 5 : Math.min(n, len);
+      appendOutput(raw, [
+        'Browser history is private — sites cannot read your visited URLs.',
+        'Last ' + show + ' entries (this tab): length only — ' + len + ' total.'
+      ]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var ipMatch = /^ip\s*$/.exec(raw);
+    if (ipMatch) {
+      appendOutput('ip', []);
+      input.value = '';
+      hideTabOptions();
+      fetch('https://api.ipify.org?format=json').then(function(r) { return r.json(); }).then(function(d) {
+        appendResultLine(d.ip || '');
+      }).catch(function() {
+        appendResultLine('Could not get IP');
+      });
+      return;
+    }
+    var whoamiMatch = /^whoami\s*$/.exec(raw);
+    if (whoamiMatch) {
+      appendOutput('whoami', ['Yash Jain']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var mailMatch = /^mail\s*$/.exec(raw);
+    var githubMatch = /^github\s*$/.exec(raw);
+    var driveMatch = /^drive\s*$/.exec(raw);
+    var docsMatch = /^docs\s*$/.exec(raw);
+    var slidesMatch = /^slides\s*$/.exec(raw);
+    var sheetsMatch = /^sheets\s*$/.exec(raw);
+    var websiteMatch = /^website\s*$/.exec(raw);
+    if (websiteMatch) {
+      appendOutput('website', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://yashj1579.github.io/';
+      return;
+    }
+    if (driveMatch) {
+      appendOutput('drive', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://drive.google.com/';
+      return;
+    }
+    if (docsMatch) {
+      appendOutput('docs', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://docs.google.com/';
+      return;
+    }
+    if (slidesMatch) {
+      appendOutput('slides', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://slides.google.com/';
+      return;
+    }
+    if (sheetsMatch) {
+      appendOutput('sheets', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://sheets.google.com/';
+      return;
+    }
+    var linkedinMatch = /^linkedin\s*$/.exec(raw);
+    if (linkedinMatch) {
+      appendOutput('linkedin', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://www.linkedin.com/in/yashjain-aus';
+      return;
+    }
+    if (githubMatch) {
+      appendOutput('github', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://github.com';
+      return;
+    }
+    if (mailMatch) {
+      appendOutput('mail', []);
+      input.value = '';
+      hideTabOptions();
+      window.location.href = 'https://mail.google.com/';
+      return;
+    }
+    var singleHex = /^color\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
+    var radiusMatch = /^radius\s+(\d+)\s*$/.exec(raw);
+    var resetMatch = /^color\s+reset\s*$/.exec(raw);
+    var defaultMatch = /^color\s+default\s*$/.exec(raw);
+    var gradientMatch = /^color\s+gradient\s+#([0-9a-fA-F]{6})\s+#([0-9a-fA-F]{6})\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
+    var distortMatch = /^distort\s*(\d*)\s*$/.exec(raw);
+    var forceMatch = /^force\s+(\d+)\s*$/.exec(raw);
+    var echoMatch = /^echo\s+(.*)\s*$/.exec(raw);
+    if (echoMatch) {
+      appendOutput(raw, []);
+      appendOutput('echo ' + echoMatch[1], [echoMatch[1]]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (singleHex && window.updateParticleColors) {
+      appendOutput(raw, []);
+      window.updateParticleColors('single', '#' + singleHex[1]);
+      appendOutput('color #' + singleHex[1], []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (radiusMatch) {
+      var r = parseInt(radiusMatch[1], 10);
+      if (!isNaN(r) && r >= 0 && window.setParticleRadius) {
+        window.setParticleRadius(r);
+      }
+      appendOutput(raw, [!isNaN(r) && r >= 0 ? 'Radius set to ' + r : '']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (resetMatch && window.updateParticleColors) {
+      appendOutput(raw, []);
+      window.updateParticleColors('reset');
+      appendOutput('color reset', []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (defaultMatch && window.updateParticleColors) {
+      appendOutput(raw, []);
+      window.updateParticleColors('default');
+      appendOutput('color default', []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (distortMatch) {
+      var dVal = distortMatch[1] !== '' ? parseInt(distortMatch[1], 10) : 12;
+      if (!isNaN(dVal) && window.setParticleForce) {
+        window.setParticleForce(dVal);
+      }
+      appendOutput(raw, [!isNaN(dVal) ? 'Force set to ' + dVal : '']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (forceMatch) {
+      var fVal = parseInt(forceMatch[1], 10);
+      if (!isNaN(fVal) && window.setParticleForce) {
+        window.setParticleForce(fVal);
+      }
+      appendOutput(raw, [!isNaN(fVal) ? 'Force set to ' + fVal : '']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (gradientMatch && window.updateParticleColors) {
+      appendOutput(raw, []);
+      window.updateParticleColors('gradient', '#' + gradientMatch[1], '#' + gradientMatch[2], '#' + gradientMatch[3]);
+      appendOutput('color gradient #' + gradientMatch[1] + ' #' + gradientMatch[2] + ' #' + gradientMatch[3], []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    appendOutput(raw, []);
+    input.value = raw;
+    form.submit();
+  });
+
+  function updateTitlebarDimensions() {
+    var r = win.getBoundingClientRect();
+    var charW = 8;
+    var lineH = 20;
+    var cols = Math.max(10, Math.floor((r.width - 36) / charW));
+    var rows = Math.max(5, Math.floor((r.height - 120) / lineH));
+    titlebar.textContent = 'yashjain — -zsh - ' + cols + '\u00d7' + rows;
+  }
+
+  function initPosition() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var w = Math.min(820, vw - 40);
+    var h = Math.min(380, vh - 40);
+    wrapper.style.left = Math.max(20, (vw - w) / 2) + 'px';
+    wrapper.style.top = Math.max(20, (vh - h) / 2) + 'px';
+    wrapper.style.transform = 'none';
+    win.style.width = w + 'px';
+    win.style.height = h + 'px';
+    updateTitlebarDimensions();
+  }
+
+  titlebar.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    var r = wrapper.getBoundingClientRect();
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartLeft = r.left;
+    dragStartTop = r.top;
+    function move(e) {
+      var dx = e.clientX - dragStartX;
+      var dy = e.clientY - dragStartY;
+      wrapper.style.left = Math.max(0, dragStartLeft + dx) + 'px';
+      wrapper.style.top = Math.max(0, dragStartTop + dy) + 'px';
+    }
+    function stop() {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', stop);
+    }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', stop);
+  });
+
+  resizeHandle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var r = win.getBoundingClientRect();
+    resizeStartX = e.clientX;
+    resizeStartY = e.clientY;
+    resizeStartW = r.width;
+    resizeStartH = r.height;
+    function move(e) {
+      var dw = e.clientX - resizeStartX;
+      var dh = e.clientY - resizeStartY;
+      var newW = Math.max(minW, resizeStartW + dw);
+      var newH = Math.max(minH, resizeStartH + dh);
+      win.style.width = newW + 'px';
+      win.style.height = newH + 'px';
+      updateTitlebarDimensions();
+    }
+    function stop() {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', stop);
+    }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', stop);
+  });
+
+  initPosition();
+  window.addEventListener('resize', function() {
+    var r = wrapper.getBoundingClientRect();
+    if (r.left + r.width > window.innerWidth || r.top + r.height > window.innerHeight) {
+      initPosition();
+    }
+  });
+})();
+</script>

@@ -240,11 +240,12 @@ if (document.readyState === 'loading') {
 
 // Particle Field for About Me Section
 const particleCanvas = document.getElementById('particle-canvas');
-const particleCtx = particleCanvas.getContext('2d');
+const particleCtx = particleCanvas ? particleCanvas.getContext('2d') : null;
 let mouseX = 0;
 let mouseY = 0;
 
 function resizeParticleCanvas() {
+  if (!particleCanvas || !particleCtx) return;
   const aboutSection = document.querySelector('.about-me');
   if (aboutSection) {
     const rect = aboutSection.getBoundingClientRect();
@@ -252,8 +253,10 @@ function resizeParticleCanvas() {
     particleCanvas.height = rect.height;
   }
 }
-resizeParticleCanvas();
-window.addEventListener('resize', resizeParticleCanvas);
+if (particleCanvas) {
+  resizeParticleCanvas();
+  window.addEventListener('resize', resizeParticleCanvas);
+}
 
 // Particle class
 class Particle {
@@ -317,6 +320,8 @@ class Particle {
   }
 }
 
+// Create particles (only when about-me section exists)
+if (particleCanvas && particleCtx) {
 // Create particles
 const particles = [];
 for (let i = 0; i < 1000; i++) {
@@ -349,6 +354,7 @@ function animateParticles() {
   requestAnimationFrame(animateParticles);
 }
 animateParticles();
+}
 
 // Typewriter effect (without "Yash Jain" - that stays permanent)
 const heroText = document.getElementById('hero-text');
@@ -374,20 +380,24 @@ function type() {
   }
   setTimeout(type, isDeleting ? 50 : 100);
 }
-type();
+if (heroText) type();
 
 // Advanced car animation with lane changing and turning
 const canvas = document.getElementById('cars-canvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 
 function resizeCanvas() {
+  if (!canvas || !ctx) return;
 canvas.width = window.innerWidth;
   canvas.height = 200;
 }
+if (canvas && ctx) {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+}
 
-// Define lanes
+// Define lanes (only when cars canvas exists)
+if (canvas && ctx) {
 const lanes = [40, 80, 120, 160];
 const laneWidth = 40;
 
@@ -680,6 +690,7 @@ function animate() {
   requestAnimationFrame(animate);
 }
 animate();
+}
 
 // Research section: either slideshow (legacy) or new photo + scroll layout
 let slideIndex = 0;
