@@ -15,7 +15,7 @@ classes: [google-only]
     <div class="terminal-search">
       <div class="terminal-output" id="terminal-output"></div>
       <div class="terminal-form-row">
-        <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get">
+        <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get" target="_top">
           <span class="terminal-prompt">yashjain@google $</span>
           <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off">
         </form>
@@ -37,9 +37,11 @@ classes: [google-only]
   var influenceRadius = 100;
   var forceFactor = 300;
   var defaultPalette = [
-    { r: 230, g: 80, b: 60 },
-    { r: 240, g: 120, b: 50 },
-    { r: 250, g: 200, b: 80 }
+    { r: 0, g: 105, b: 148 },
+    { r: 0, g: 150, b: 200 },
+    { r: 30, g: 144, b: 255 },
+    { r: 0, g: 180, b: 200 },
+    { r: 20, g: 120, b: 180 }
   ];
   var currentPalette = defaultPalette.slice();
 
@@ -385,6 +387,24 @@ classes: [google-only]
       outputEl.appendChild(out);
     });
     outputEl.scrollTop = outputEl.scrollHeight;
+  }
+
+  function navigateTo(url) {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'navigate', url: url }, '*');
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  function submitSearchForm() {
+    if (window.parent !== window) {
+      var q = (form.querySelector('input[name=q]') || input).value;
+      var url = form.action + (form.action.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q || '');
+      navigateTo(url);
+    } else {
+      form.submit();
+    }
   }
 
   function appendResultLine(text) {
@@ -790,7 +810,7 @@ classes: [google-only]
     if (forceSearch) {
       appendOutput(displayLine, []);
       input.value = raw;
-      form.submit();
+      submitSearchForm();
       return;
     }
     commandHistory.push(raw);
@@ -2051,35 +2071,35 @@ classes: [google-only]
       appendOutput('website', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://yashj1579.github.io/';
+      navigateTo('https://yashj1579.github.io/');
       return;
     }
     if (driveMatch) {
       appendOutput('drive', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://drive.google.com/';
+      navigateTo('https://drive.google.com/');
       return;
     }
     if (docsMatch) {
       appendOutput('docs', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://docs.google.com/';
+      navigateTo('https://docs.google.com/');
       return;
     }
     if (slidesMatch) {
       appendOutput('slides', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://slides.google.com/';
+      navigateTo('https://slides.google.com/');
       return;
     }
     if (sheetsMatch) {
       appendOutput('sheets', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://sheets.google.com/';
+      navigateTo('https://sheets.google.com/');
       return;
     }
     var linkedinMatch = /^linkedin\s*$/.exec(raw);
@@ -2087,21 +2107,21 @@ classes: [google-only]
       appendOutput('linkedin', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://www.linkedin.com/in/yashjain-aus';
+      navigateTo('https://www.linkedin.com/in/yashjain-aus');
       return;
     }
     if (githubMatch) {
       appendOutput('github', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://github.com';
+      navigateTo('https://github.com');
       return;
     }
     if (mailMatch) {
       appendOutput('mail', []);
       input.value = '';
       hideTabOptions();
-      window.location.href = 'https://mail.google.com/';
+      navigateTo('https://mail.google.com/');
       return;
     }
     var singleHex = /^color\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
@@ -2308,7 +2328,7 @@ classes: [google-only]
     }
     appendOutput(raw, []);
     input.value = raw;
-    form.submit();
+    submitSearchForm();
   });
 
   function updateTitlebarDimensions() {
