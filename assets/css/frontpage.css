@@ -861,21 +861,46 @@ body.google-only .terminal-drag-wrapper {
 
 /* Temperature popup - outside temp from weather API + thermometer */
 .popup-temperature {
-  padding: 8px 0;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 220px;
+  max-width: 240px;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+.popup-temperature--loading .temp-label,
+.popup-temperature--loading .temp-display-row,
+.popup-temperature--loading .temp-thermo-hint {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
 }
 
 .popup-temperature .temp-loading {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
   font-size: clamp(11px, 2.5cqi, 13px);
-  color: rgba(0, 255, 255, 0.8);
-  margin-bottom: 8px;
+  color: rgba(0, 255, 255, 0.75);
+  margin-bottom: 0;
+}
+
+.popup-temperature:not(.popup-temperature--loading) .temp-loading {
+  display: none;
+}
+
+.popup-temperature .temp-label {
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 255, 255, 0.5);
+  margin-bottom: 10px;
 }
 
 /* Row: temperature text on left, thermometer on right */
@@ -883,8 +908,13 @@ body.google-only .terminal-drag-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 18px;
   flex-wrap: wrap;
+  padding: 14px 16px;
+  background: linear-gradient(145deg, rgba(0, 50, 70, 0.25) 0%, rgba(0, 35, 55, 0.35) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Value and unit inline: "23 °C" */
@@ -893,22 +923,25 @@ body.google-only .terminal-drag-wrapper {
   flex-direction: row;
   align-items: baseline;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .popup-temperature .temp-value {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
-  font-size: clamp(1.35rem, 6cqi, 1.75rem);
-  font-weight: 300;
-  color: #c8f0f8;
+  font-size: clamp(1.5rem, 7cqi, 2rem);
+  font-weight: 400;
+  color: #e0f8ff;
   line-height: 1;
-  text-shadow: 0 0 24px rgba(0, 255, 255, 0.25);
+  text-shadow: 0 0 28px rgba(0, 255, 255, 0.35);
+  letter-spacing: -0.02em;
 }
 
 .popup-temperature .temp-unit {
-  font-size: clamp(0.9rem, 2.8cqi, 1.05rem);
-  color: rgba(0, 255, 255, 0.85);
+  font-size: clamp(0.95rem, 3cqi, 1.1rem);
+  font-weight: 500;
+  color: rgba(0, 255, 255, 0.9);
   margin: 0;
+  opacity: 0.95;
 }
 
 .popup-temperature .temp-thermo-wrap {
@@ -918,21 +951,27 @@ body.google-only .terminal-drag-wrapper {
   position: relative;
   cursor: pointer;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.popup-temperature .temp-thermo-wrap:hover {
+  transform: scale(1.03);
 }
 
 /* Tube: narrow vertical glass column - scale with container */
 .popup-temperature .temp-thermo-tube {
-  width: clamp(12px, 4cqi, 18px);
-  height: clamp(72px, 22cqi, 110px);
+  width: clamp(14px, 4.2cqi, 20px);
+  height: clamp(80px, 24cqi, 118px);
   position: relative;
-  border: 2px solid rgba(200, 220, 255, 0.5);
+  border: 1px solid rgba(220, 240, 255, 0.45);
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  background: linear-gradient(to right,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(240, 248, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.12) 100%);
-  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.1);
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(248, 252, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.14) 100%);
+  box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -944,40 +983,42 @@ body.google-only .terminal-drag-wrapper {
   left: 2px;
   right: 2px;
   height: 0;
-  min-height: 5px;
-  border-radius: 3px 3px 0 0;
+  min-height: 6px;
+  border-radius: 4px 4px 0 0;
   background: linear-gradient(to top,
-    rgba(180, 40, 40, 0.98) 0%,
-    rgba(220, 60, 60, 0.95) 40%,
-    rgba(255, 100, 80, 0.95) 100%);
-  transition: height 0.35s ease;
-  box-shadow: inset 0 -2px 8px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 80, 60, 0.35);
+    rgba(170, 35, 35, 0.98) 0%,
+    rgba(210, 55, 55, 0.96) 35%,
+    rgba(255, 95, 75, 0.95) 100%);
+  transition: height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: inset 0 -2px 10px rgba(0, 0, 0, 0.25),
+    0 0 12px rgba(255, 85, 65, 0.4);
   pointer-events: none;
 }
 
 /* Bulb at bottom - reservoir */
 .popup-temperature .temp-thermo-bulb {
-  width: clamp(22px, 7cqi, 30px);
-  height: clamp(18px, 5.5cqi, 26px);
-  margin-top: -2px;
+  width: clamp(24px, 7.5cqi, 32px);
+  height: clamp(20px, 6cqi, 28px);
+  margin-top: -1px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%,
-    rgba(255, 120, 90, 0.95),
-    rgba(200, 50, 50, 0.95) 40%,
-    rgba(160, 40, 40, 0.98));
-  border: 2px solid rgba(200, 220, 255, 0.4);
-  box-shadow: inset -2px -2px 12px rgba(0, 0, 0, 0.25),
-    0 0 14px rgba(255, 80, 60, 0.3),
-    inset 2px 2px 8px rgba(255, 200, 180, 0.15);
+  background: radial-gradient(circle at 32% 32%,
+    rgba(255, 130, 95, 0.96),
+    rgba(205, 55, 55, 0.96) 45%,
+    rgba(165, 38, 38, 0.98));
+  border: 1px solid rgba(220, 240, 255, 0.4);
+  box-shadow: inset -3px -3px 14px rgba(0, 0, 0, 0.3),
+    0 0 16px rgba(255, 85, 65, 0.35),
+    inset 2px 2px 10px rgba(255, 210, 190, 0.2);
   flex-shrink: 0;
 }
 
 .popup-temperature .temp-thermo-hint {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
-  font-size: clamp(8px, 2cqi, 10px);
-  color: rgba(0, 255, 255, 0.5);
-  margin-top: 8px;
+  font-size: 9px;
+  color: rgba(0, 255, 255, 0.4);
+  margin-top: 10px;
   text-align: center;
+  letter-spacing: 0.04em;
 }
 
 /* Weather popup - conditions only (no temperature) */

@@ -472,6 +472,7 @@ classes: [google-only]
     'calculator',
     'calendar',
     'calender',
+    'cal',
     'battery',
     'charge',
     'temperature',
@@ -1175,7 +1176,7 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
-    if (/^calendar\s*$/.test(raw) || /^calender\s*$/.test(raw)) {
+    if (/^calendar\s*$/.test(raw) || /^calender\s*$/.test(raw) || /^cal\s*$/.test(raw)) {
       var contentBox = document.createElement('div');
       contentBox.className = 'popup-calendar';
       var d = new Date();
@@ -1375,7 +1376,7 @@ classes: [google-only]
       contentBox.appendChild(displayRow);
       contentBox.appendChild(hintEl);
       contentBox.classList.add('popup-temperature--loading');
-      createPopupWindow('Temperature', contentBox, null, { width: 220, height: 260, topOffset: 80, leftOffset: 0, minW: 200, minH: 220 });
+      createPopupWindow('Temperature', contentBox, null, { width: 280, height: 300, topOffset: 80, leftOffset: 0, minW: 240, minH: 260 });
       var tempC = null;
       var useCelsius = true;
       function updateDisplay() {
