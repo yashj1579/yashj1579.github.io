@@ -43,6 +43,211 @@ classes: [google-only]
   ];
   var currentPalette = defaultPalette.slice();
 
+  var PALETTES = {
+    cyber: [
+      { r: 0, g: 255, b: 204 },
+      { r: 0, g: 255, b: 255 },
+      { r: 0, g: 200, b: 170 },
+      { r: 180, g: 100, b: 255 },
+      { r: 138, g: 43, b: 226 }
+    ],
+    red: [
+      { r: 220, g: 50, b: 50 },
+      { r: 200, g: 40, b: 40 },
+      { r: 255, g: 80, b: 80 },
+      { r: 180, g: 30, b: 30 }
+    ],
+    blue: [
+      { r: 50, g: 100, b: 220 },
+      { r: 80, g: 120, b: 255 },
+      { r: 30, g: 60, b: 180 },
+      { r: 100, g: 150, b: 255 }
+    ],
+    fire: [
+      { r: 255, g: 100, b: 0 },
+      { r: 255, g: 180, b: 0 },
+      { r: 255, g: 80, b: 40 },
+      { r: 220, g: 50, b: 20 },
+      { r: 255, g: 140, b: 20 }
+    ],
+    rainbow: [
+      { r: 255, g: 0, b: 0 },
+      { r: 255, g: 127, b: 0 },
+      { r: 255, g: 255, b: 0 },
+      { r: 0, g: 255, b: 0 },
+      { r: 0, g: 0, b: 255 },
+      { r: 75, g: 0, b: 130 },
+      { r: 148, g: 0, b: 211 }
+    ],
+    cool: [
+      { r: 0, g: 255, b: 255 },
+      { r: 0, g: 200, b: 220 },
+      { r: 100, g: 200, b: 255 },
+      { r: 80, g: 180, b: 220 },
+      { r: 0, g: 230, b: 240 }
+    ],
+    forest: [
+      { r: 34, g: 100, b: 50 },
+      { r: 20, g: 80, b: 40 },
+      { r: 60, g: 120, b: 60 },
+      { r: 15, g: 60, b: 30 },
+      { r: 45, g: 110, b: 55 }
+    ],
+    chocolate: [
+      { r: 210, g: 105, b: 30 },
+      { r: 139, g: 69, b: 19 },
+      { r: 160, g: 82, b: 45 },
+      { r: 101, g: 67, b: 33 },
+      { r: 140, g: 90, b: 40 }
+    ],
+    ocean: [
+      { r: 0, g: 105, b: 148 },
+      { r: 0, g: 150, b: 200 },
+      { r: 30, g: 144, b: 255 },
+      { r: 0, g: 180, b: 200 },
+      { r: 20, g: 120, b: 180 }
+    ],
+    mist: [
+      { r: 180, g: 190, b: 200 },
+      { r: 200, g: 205, b: 210 },
+      { r: 160, g: 175, b: 185 },
+      { r: 220, g: 225, b: 230 },
+      { r: 190, g: 198, b: 205 }
+    ],
+    lavender: [
+      { r: 230, g: 230, b: 250 },
+      { r: 218, g: 112, b: 214 },
+      { r: 147, g: 112, b: 219 },
+      { r: 186, g: 85, b: 211 },
+      { r: 200, g: 162, b: 200 }
+    ],
+    aussie: [
+      { r: 255, g: 200, b: 0 },
+      { r: 0, g: 150, b: 100 },
+      { r: 255, g: 220, b: 80 },
+      { r: 0, g: 120, b: 80 },
+      { r: 255, g: 210, b: 50 }
+    ],
+    desert: [
+      { r: 210, g: 180, b: 140 },
+      { r: 194, g: 178, b: 128 },
+      { r: 244, g: 164, b: 96 },
+      { r: 205, g: 133, b: 63 },
+      { r: 222, g: 184, b: 135 }
+    ],
+    dessert: [
+      { r: 255, g: 182, b: 193 },
+      { r: 255, g: 218, b: 185 },
+      { r: 255, g: 228, b: 225 },
+      { r: 221, g: 160, b: 221 },
+      { r: 255, g: 192, b: 203 }
+    ],
+    confetti: [
+      { r: 255, g: 0, b: 100 },
+      { r: 255, g: 200, b: 0 },
+      { r: 0, g: 255, b: 150 },
+      { r: 100, g: 150, b: 255 },
+      { r: 255, g: 100, b: 255 },
+      { r: 0, g: 255, b: 255 },
+      { r: 255, g: 100, b: 100 }
+    ],
+    royal: [
+      { r: 138, g: 43, b: 226 },
+      { r: 218, g: 165, b: 32 },
+      { r: 75, g: 0, b: 130 },
+      { r: 255, g: 215, b: 0 },
+      { r: 160, g: 100, b: 255 }
+    ],
+    street: [
+      { r: 80, g: 80, b: 90 },
+      { r: 100, g: 100, b: 110 },
+      { r: 255, g: 140, b: 0 },
+      { r: 60, g: 60, b: 70 },
+      { r: 120, g: 120, b: 130 }
+    ],
+    dark: [
+      { r: 40, g: 40, b: 45 },
+      { r: 25, g: 25, b: 30 },
+      { r: 60, g: 60, b: 65 },
+      { r: 35, g: 35, b: 42 }
+    ],
+    light: [
+      { r: 240, g: 245, b: 255 },
+      { r: 230, g: 235, b: 245 },
+      { r: 255, g: 250, b: 250 },
+      { r: 220, g: 230, b: 240 },
+      { r: 250, g: 248, b: 255 }
+    ],
+    chaos: [
+      { r: 255, g: 0, b: 0 },
+      { r: 0, g: 255, b: 0 },
+      { r: 0, g: 0, b: 255 },
+      { r: 255, g: 255, b: 0 },
+      { r: 255, g: 0, b: 255 },
+      { r: 0, g: 255, b: 255 },
+      { r: 255, g: 128, b: 0 }
+    ],
+    code: [
+      { r: 100, g: 180, b: 100 },
+      { r: 230, g: 180, b: 80 },
+      { r: 200, g: 200, b: 200 },
+      { r: 150, g: 150, b: 255 },
+      { r: 220, g: 140, b: 120 }
+    ],
+    candy: [
+      { r: 255, g: 182, b: 193 },
+      { r: 200, g: 255, b: 220 },
+      { r: 255, g: 250, b: 180 },
+      { r: 255, g: 200, b: 220 },
+      { r: 200, g: 230, b: 255 },
+      { r: 255, g: 220, b: 210 }
+    ],
+    panda: [
+      { r: 40, g: 40, b: 40 },
+      { r: 240, g: 240, b: 240 },
+      { r: 120, g: 120, b: 120 },
+      { r: 80, g: 80, b: 80 },
+      { r: 200, g: 200, b: 200 }
+    ],
+    green: [
+      { r: 50, g: 200, b: 80 },
+      { r: 34, g: 160, b: 60 },
+      { r: 100, g: 220, b: 120 },
+      { r: 20, g: 140, b: 50 },
+      { r: 70, g: 180, b: 90 }
+    ],
+    burntorange: [
+      { r: 204, g: 85, b: 0 },
+      { r: 230, g: 100, b: 30 },
+      { r: 180, g: 70, b: 0 },
+      { r: 255, g: 120, b: 40 },
+      { r: 160, g: 60, b: 0 }
+    ],
+    gray: [
+      { r: 128, g: 128, b: 128 },
+      { r: 160, g: 160, b: 160 },
+      { r: 100, g: 100, b: 100 },
+      { r: 180, g: 180, b: 180 },
+      { r: 90, g: 90, b: 90 }
+    ],
+    grey: [
+      { r: 128, g: 128, b: 128 },
+      { r: 160, g: 160, b: 160 },
+      { r: 100, g: 100, b: 100 },
+      { r: 180, g: 180, b: 180 },
+      { r: 90, g: 90, b: 90 }
+    ],
+    cyber2: [
+      { r: 100, g: 50, b: 255 },
+      { r: 138, g: 43, b: 226 },
+      { r: 80, g: 80, b: 255 },
+      { r: 180, g: 100, b: 255 },
+      { r: 60, g: 60, b: 220 },
+      { r: 160, g: 80, b: 255 }
+    ]
+  };
+  window.PARTICLE_PALETTE_NAMES = Object.keys(PALETTES);
+
   function resize() {
     width = window.innerWidth;
     height = window.innerHeight;
@@ -107,6 +312,10 @@ classes: [google-only]
   window.updateParticleColors = function(mode) {
     if (mode === 'reset' || mode === 'default') {
       currentPalette = defaultPalette.slice();
+      return;
+    }
+    if (PALETTES[mode]) {
+      currentPalette = PALETTES[mode].map(function(c) { return { r: c.r, g: c.g, b: c.b }; });
       return;
     }
     if (mode === 'single' && arguments[1]) {
@@ -195,8 +404,37 @@ classes: [google-only]
 
   var COMMANDS = [
     'color',
+    'color -ls',
     'color reset',
     'color default',
+    'color cyber',
+    'color red',
+    'color blue',
+    'color fire',
+    'color rainbow',
+    'color cool',
+    'color forest',
+    'color chocolate',
+    'color ocean',
+    'color mist',
+    'color lavender',
+    'color aussie',
+    'color desert',
+    'color dessert',
+    'color confetti',
+    'color royal',
+    'color street',
+    'color dark',
+    'color light',
+    'color chaos',
+    'color code',
+    'color candy',
+    'color panda',
+    'color green',
+    'color burntorange',
+    'color gray',
+    'color grey',
+    'color cyber2',
     'color gradient',
     'color #rrggbb',
 
@@ -229,6 +467,7 @@ classes: [google-only]
     'timer',
     'timer -s',
     'clock',
+    'time',
     'date',
     'calculator',
     'calendar',
@@ -374,7 +613,7 @@ classes: [google-only]
     return (a * b) / gcd(a, b);
   }
 
-  function createPopupWindow(title, contentEl, onClose) {
+  function createPopupWindow(title, contentEl, onClose, options) {
     var wrapper = document.createElement('div');
     wrapper.className = 'popup-wrapper';
     var win = document.createElement('div');
@@ -399,10 +638,19 @@ classes: [google-only]
     win.appendChild(content);
     win.appendChild(resizeHandle);
     wrapper.appendChild(win);
-    var minW = 200, minH = 120;
+    var opts = options || {};
+    if (opts.darkTheme) wrapper.classList.add('popup-wrapper--dark');
+    var minW = opts.minW != null ? opts.minW : 200;
+    var minH = opts.minH != null ? opts.minH : 120;
+    var w = opts.width != null ? opts.width : 280;
+    var h = opts.height != null ? opts.height : 160;
+    var topOffset = opts.topOffset != null ? opts.topOffset : -40;
+    var leftOffset = opts.leftOffset != null ? opts.leftOffset : 80;
     var vw = window.innerWidth, vh = window.innerHeight;
-    wrapper.style.left = Math.max(20, (vw - 280) / 2 + 80) + 'px';
-    wrapper.style.top = Math.max(20, (vh - 160) / 2 - 40) + 'px';
+    wrapper.style.left = Math.max(20, (vw - w) / 2 + leftOffset) + 'px';
+    wrapper.style.top = Math.max(20, (vh - h) / 2 + topOffset) + 'px';
+    win.style.width = w + 'px';
+    win.style.height = h + 'px';
     closeBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -645,7 +893,7 @@ classes: [google-only]
       createPopupWindow('Timer', contentBox, function() {
         if (intervalId) clearInterval(intervalId);
         setParticlesDefault();
-      });
+      }, { darkTheme: true });
       var msg = isSeconds
         ? ('Timer set for ' + totalSeconds + ' second' + (totalSeconds !== 1 ? 's' : ''))
         : ('Timer set for ' + (totalSeconds / 60) + ' minute' + (totalSeconds !== 60 ? 's' : ''));
@@ -654,7 +902,7 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
-    if (/^clock\s*$/.test(raw)) {
+    if (/^(?:clock|time)\s*$/.test(raw)) {
       var isAnalog = false;
       var clockIntervalId = null;
       var contentBox = document.createElement('div');
@@ -724,7 +972,8 @@ classes: [google-only]
       updateDigital();
       clockIntervalId = setInterval(tick, 1000);
       var toggleBtn = document.createElement('button');
-      toggleBtn.className = 'timer-btn';
+      toggleBtn.className = 'clock-mode-toggle';
+      toggleBtn.type = 'button';
       toggleBtn.style.marginTop = '12px';
       toggleBtn.textContent = 'Analog';
       toggleBtn.addEventListener('click', function() {
@@ -737,7 +986,7 @@ classes: [google-only]
       contentBox.appendChild(digitalDiv);
       contentBox.appendChild(analogDiv);
       contentBox.appendChild(toggleBtn);
-      createPopupWindow('Clock', contentBox, function() { if (clockIntervalId) clearInterval(clockIntervalId); });
+      createPopupWindow('Clock', contentBox, function() { if (clockIntervalId) clearInterval(clockIntervalId); }, { width: 280, height: 200, topOffset: 80, leftOffset: 0 });
       appendOutput(raw, []);
       input.value = '';
       hideTabOptions();
@@ -784,12 +1033,12 @@ classes: [google-only]
         ['DD-MM-YYYY', 'DD-MM-YYYY'],
         ['MM-DD-YYYY', 'MM-DD-YYYY'],
         ['YYYY-MM-DD', 'YYYY-MM-DD'],
-        ['Month D, YYYY', 'Month D, YYYY'],
-        ['D Month YYYY', 'D Month YYYY'],
-        ['Weekday Dth Month', 'Tuesday 15th March'],
-        ['Weekday, Month Dth', 'Tuesday, March 15th'],
-        ['Weekday, Month Dth YYYY', 'Tuesday, March 15th 2026'],
-        ['Weekday D Month YYYY', 'Tuesday 15 March 2026']
+        ['Month D, YYYY', 'Month DOY, YYYY'],
+        ['D Month YYYY', 'DOY Month YYYY'],
+        ['Weekday Dth Month', 'Weekday DOY Month'],
+        ['Weekday, Month Dth', 'Weekday, Month DOY'],
+        ['Weekday, Month Dth YYYY', 'Weekday, Month DOY YYYY'],
+        ['Weekday D Month YYYY', 'Weekday DOY Month YYYY']
       ];
       var formatIndex = 0;
       function setFormatByIndex(i) {
@@ -820,7 +1069,7 @@ classes: [google-only]
       row.appendChild(rightBtn);
       contentBox.appendChild(displayEl);
       contentBox.appendChild(row);
-      createPopupWindow('Date', contentBox);
+      createPopupWindow('Date', contentBox, null, { width: 320, height: 240, topOffset: 80, leftOffset: 0 });
       appendOutput(raw, []);
       input.value = '';
       hideTabOptions();
@@ -910,7 +1159,7 @@ classes: [google-only]
       });
       contentBox.appendChild(display);
       contentBox.appendChild(grid);
-      createPopupWindow('Calculator', contentBox);
+      createPopupWindow('Calculator', contentBox, null, { width: 300, height: 380, topOffset: 80, leftOffset: 0, minW: 260, minH: 320 });
       appendOutput(raw, []);
       input.value = '';
       hideTabOptions();
@@ -1010,7 +1259,7 @@ classes: [google-only]
       contentBox.appendChild(titleEl);
       contentBox.appendChild(gridEl);
       contentBox.appendChild(nav);
-      createPopupWindow('Calendar', contentBox);
+      createPopupWindow('Calendar', contentBox, null, { width: 320, height: 360, topOffset: 80, leftOffset: 0, minW: 280, minH: 320 });
       appendOutput(raw, []);
       input.value = '';
       hideTabOptions();
@@ -1120,6 +1369,8 @@ classes: [google-only]
     var radiusMatch = /^radius\s+(\d+)\s*$/.exec(raw);
     var resetMatch = /^color\s+reset\s*$/.exec(raw);
     var defaultMatch = /^color\s+default\s*$/.exec(raw);
+    var colorLsMatch = /^color\s+-ls\s*$/.exec(raw);
+    var colorNameMatch = /^color\s+(\w+)\s*$/.exec(raw);
     var gradientMatch = /^color\s+gradient\s+#([0-9a-fA-F]{6})\s+#([0-9a-fA-F]{6})\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
     var distortMatch = /^distort\s*(\d*)\s*$/.exec(raw);
     var forceMatch = /^force\s+(\d+)\s*$/.exec(raw);
@@ -1248,10 +1499,29 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
+    if (colorLsMatch) {
+      var names = (window.PARTICLE_PALETTE_NAMES || []).slice().sort();
+      appendOutput(raw, [
+        'Named palettes: ' + names.join(', '),
+        'Other: reset, default, gradient #hex #hex #hex, #rrggbb'
+      ]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (defaultMatch && window.updateParticleColors) {
       appendOutput(raw, []);
       window.updateParticleColors('default');
       appendOutput('color default', []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (colorNameMatch && window.PARTICLE_PALETTE_NAMES && window.PARTICLE_PALETTE_NAMES.indexOf(colorNameMatch[1].toLowerCase()) >= 0 && window.updateParticleColors) {
+      var name = colorNameMatch[1].toLowerCase();
+      appendOutput(raw, []);
+      window.updateParticleColors(name);
+      appendOutput('color ' + name, []);
       input.value = '';
       hideTabOptions();
       return;
@@ -1301,10 +1571,10 @@ classes: [google-only]
   function initPosition() {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
-    var w = Math.min(820, vw - 40);
-    var h = Math.min(380, vh - 40);
-    wrapper.style.left = Math.max(20, 40) + 'px';
-    wrapper.style.top = Math.max(20, (vh - h) / 2 + 50) + 'px';
+    var w = Math.min(1000, vw - 40);
+    var h = Math.min(500, vh - 40);
+    wrapper.style.left = Math.max(20, (vw - w) / 2) + 'px';
+    wrapper.style.top = Math.max(20, (vh - h) / 2) + 'px';
     wrapper.style.transform = 'none';
     win.style.width = w + 'px';
     win.style.height = h + 'px';
