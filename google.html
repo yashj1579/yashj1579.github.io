@@ -14,11 +14,13 @@ classes: [google-only]
     <div class="terminal-titlebar" id="terminal-titlebar">yashjain — -ysh</div>
     <div class="terminal-search">
       <div class="terminal-output" id="terminal-output"></div>
-      <div class="terminal-tab-options" id="terminal-tab-options"></div>
-      <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get">
-        <span class="terminal-prompt">yashjain@google $</span>
-        <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off">
-      </form>
+      <div class="terminal-form-row">
+        <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get">
+          <span class="terminal-prompt">yashjain@google $</span>
+          <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off">
+        </form>
+        <div class="terminal-tab-options" id="terminal-tab-options"></div>
+      </div>
     </div>
     <div class="terminal-resize-handle" id="terminal-resize-handle"></div>
   </div>
@@ -404,8 +406,13 @@ classes: [google-only]
     closeBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      if (typeof onClose === 'function') onClose();
-      wrapper.remove();
+      wrapper.classList.add('popup-closing');
+      win.addEventListener('animationend', function closeAnimEnd(ev) {
+        if (ev.target !== win) return;
+        win.removeEventListener('animationend', closeAnimEnd);
+        if (typeof onClose === 'function') onClose();
+        wrapper.remove();
+      });
     });
     var dragStartX, dragStartY, dragStartLeft, dragStartTop;
     titlebar.addEventListener('mousedown', function(e) {
@@ -452,6 +459,9 @@ classes: [google-only]
       document.addEventListener('mouseup', stop);
     });
     document.body.appendChild(wrapper);
+    requestAnimationFrame(function() {
+      wrapper.classList.add('popup-enter');
+    });
     return { wrapper: wrapper, win: win, content: content };
   }
 
@@ -523,10 +533,13 @@ classes: [google-only]
     }
     var timerSecondsMatch = /^timer\s+-s\s+(\d+)\s*$/.exec(raw);
     var timerMinutesMatch = /^timer\s+(\d+)\s*$/.exec(raw);
-    if (timerSecondsMatch || timerMinutesMatch) {
+    var timerNoArgMatch = /^timer\s*$/.exec(raw);
+    if (timerSecondsMatch || timerMinutesMatch || timerNoArgMatch) {
       var totalSeconds = timerSecondsMatch
         ? Math.max(1, parseInt(timerSecondsMatch[1], 10))
-        : Math.max(1, parseInt(timerMinutesMatch[1], 10)) * 60;
+        : timerMinutesMatch
+          ? Math.max(1, parseInt(timerMinutesMatch[1], 10)) * 60
+          : 5 * 60;
       var isSeconds = !!timerSecondsMatch;
       var remainingSeconds = totalSeconds;
       var paused = false;
@@ -669,7 +682,7 @@ classes: [google-only]
         var ctx = canvas.getContext('2d');
         var cx = 80, cy = 80, r = 70;
         ctx.clearRect(0, 0, 160, 160);
-        ctx.strokeStyle = '#666';
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -686,19 +699,19 @@ classes: [google-only]
         var secA = (sec * 6 - 90) * Math.PI / 180;
         var minA = (min * 6 - 90) * Math.PI / 180;
         var hrA = (hr * 30 - 90) * Math.PI / 180;
-        ctx.strokeStyle = '#489248';
+        ctx.strokeStyle = '#00ddcc';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(cx + 45 * Math.cos(hrA), cy + 45 * Math.sin(hrA));
         ctx.stroke();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = '#e0e0e0';
+        ctx.strokeStyle = '#a0e8f0';
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(cx + 55 * Math.cos(minA), cy + 55 * Math.sin(minA));
         ctx.stroke();
-        ctx.strokeStyle = '#cc3333';
+        ctx.strokeStyle = '#ff66aa';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
@@ -767,9 +780,7 @@ classes: [google-only]
       var displayEl = document.createElement('div');
       displayEl.className = 'date-display';
       displayEl.textContent = formatDate(format);
-      var select = document.createElement('select');
-      select.className = 'date-format-select';
-      [
+      var formatsList = [
         ['DD-MM-YYYY', 'DD-MM-YYYY'],
         ['MM-DD-YYYY', 'MM-DD-YYYY'],
         ['YYYY-MM-DD', 'YYYY-MM-DD'],
@@ -779,19 +790,36 @@ classes: [google-only]
         ['Weekday, Month Dth', 'Tuesday, March 15th'],
         ['Weekday, Month Dth YYYY', 'Tuesday, March 15th 2026'],
         ['Weekday D Month YYYY', 'Tuesday 15 March 2026']
-      ].forEach(function(opt) {
-        var o = document.createElement('option');
-        o.value = opt[0];
-        o.textContent = opt[1];
-        if (opt[0] === format) o.selected = true;
-        select.appendChild(o);
-      });
-      select.addEventListener('change', function() {
-        format = select.value;
+      ];
+      var formatIndex = 0;
+      function setFormatByIndex(i) {
+        formatIndex = (i + formatsList.length) % formatsList.length;
+        format = formatsList[formatIndex][0];
         displayEl.textContent = formatDate(format);
-      });
+        labelEl.textContent = formatsList[formatIndex][1];
+      }
+      var row = document.createElement('div');
+      row.className = 'date-format-row';
+      var leftBtn = document.createElement('button');
+      leftBtn.className = 'date-format-arrow';
+      leftBtn.type = 'button';
+      leftBtn.setAttribute('aria-label', 'Previous format');
+      leftBtn.innerHTML = '&#9664;';
+      leftBtn.addEventListener('click', function() { setFormatByIndex(formatIndex - 1); });
+      var labelEl = document.createElement('span');
+      labelEl.className = 'date-format-label';
+      labelEl.textContent = formatsList[formatIndex][1];
+      var rightBtn = document.createElement('button');
+      rightBtn.className = 'date-format-arrow';
+      rightBtn.type = 'button';
+      rightBtn.setAttribute('aria-label', 'Next format');
+      rightBtn.innerHTML = '&#9654;';
+      rightBtn.addEventListener('click', function() { setFormatByIndex(formatIndex + 1); });
+      row.appendChild(leftBtn);
+      row.appendChild(labelEl);
+      row.appendChild(rightBtn);
       contentBox.appendChild(displayEl);
-      contentBox.appendChild(select);
+      contentBox.appendChild(row);
       createPopupWindow('Date', contentBox);
       appendOutput(raw, []);
       input.value = '';
@@ -913,6 +941,10 @@ classes: [google-only]
         gridEl.appendChild(header);
         var firstDay = new Date(currentYear, currentMonth, 1).getDay();
         var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        var today = new Date();
+        var todayYear = today.getFullYear();
+        var todayMonth = today.getMonth();
+        var todayDate = today.getDate();
         var row = document.createElement('div');
         row.className = 'calendar-row';
         for (var i = 0; i < firstDay; i++) {
@@ -929,6 +961,9 @@ classes: [google-only]
           }
           var cell = document.createElement('span');
           cell.className = 'calendar-cell';
+          if (currentYear === todayYear && currentMonth === todayMonth && day === todayDate) {
+            cell.classList.add('calendar-today');
+          }
           cell.textContent = day;
           row.appendChild(cell);
         }
@@ -951,6 +986,16 @@ classes: [google-only]
         if (currentMonth < 0) { currentMonth = 11; currentYear--; }
         render();
       });
+      var todayBtn = document.createElement('button');
+      todayBtn.className = 'calendar-today-btn';
+      todayBtn.title = 'Go to today';
+      todayBtn.textContent = '\u2302';
+      todayBtn.addEventListener('click', function() {
+        var t = new Date();
+        currentMonth = t.getMonth();
+        currentYear = t.getFullYear();
+        render();
+      });
       var nextBtn = document.createElement('button');
       nextBtn.className = 'timer-btn';
       nextBtn.textContent = '\u2192';
@@ -960,6 +1005,7 @@ classes: [google-only]
         render();
       });
       nav.appendChild(prevBtn);
+      nav.appendChild(todayBtn);
       nav.appendChild(nextBtn);
       contentBox.appendChild(titleEl);
       contentBox.appendChild(gridEl);
@@ -1257,8 +1303,8 @@ classes: [google-only]
     var vh = window.innerHeight;
     var w = Math.min(820, vw - 40);
     var h = Math.min(380, vh - 40);
-    wrapper.style.left = Math.max(20, (vw - w) / 2) + 'px';
-    wrapper.style.top = Math.max(20, (vh - h) / 2) + 'px';
+    wrapper.style.left = Math.max(20, 40) + 'px';
+    wrapper.style.top = Math.max(20, (vh - h) / 2 + 50) + 'px';
     wrapper.style.transform = 'none';
     win.style.width = w + 'px';
     win.style.height = h + 'px';

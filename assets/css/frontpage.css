@@ -334,7 +334,25 @@ body.google-only .terminal-drag-wrapper {
   border-bottom: 2px solid #666;
 }
 
-/* Popup windows (timer, etc.) - draggable, resizable, close button */
+/* Popup windows (timer, etc.) - cyberpunk theme, draggable, resizable, close button */
+@keyframes popupOpen {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popupClose {
+  to {
+    opacity: 0;
+    transform: scale(0.92) translateY(6px);
+  }
+}
+
 .popup-wrapper {
   position: fixed;
   z-index: 1001;
@@ -342,32 +360,60 @@ body.google-only .terminal-drag-wrapper {
   min-height: 120px;
 }
 
+.popup-wrapper .popup-window {
+  opacity: 0;
+  transform: scale(0.88) translateY(-8px);
+}
+
+.popup-wrapper.popup-enter .popup-window {
+  animation: popupOpen 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.popup-wrapper.popup-closing .popup-window {
+  animation: popupClose 0.2s ease-in forwards;
+}
+
 .popup-window {
   width: 280px;
   height: 160px;
   margin: 0;
-  background: #4a4a4a;
+  container-type: size;
+  container-name: popup;
+  background: linear-gradient(165deg, #0f0e17 0%, #1a1625 45%, #15121c 100%);
   border-radius: 10px 10px 0 0;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
-  border: 1px solid #1a1a1a;
+  box-shadow: 0 0 0 1px rgba(0, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(138, 43, 226, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.2);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
+.popup-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.5), transparent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
 .popup-titlebar {
   cursor: move;
   user-select: none;
-  background: #3a3a3a;
-  color: #b0b0b0;
+  background: linear-gradient(180deg, rgba(20, 18, 30, 0.98) 0%, rgba(15, 14, 23, 0.98) 100%);
+  color: #a0e0e0;
   font-family: 'SF Mono', 'Consolas', 'Monaco', 'Inconsolata', monospace;
   font-size: 13px;
   padding: 8px 10px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
 }
 
 .popup-close {
@@ -375,25 +421,29 @@ body.google-only .terminal-drag-wrapper {
   width: 24px;
   height: 24px;
   margin-right: 8px;
-  border: none;
+  border: 1px solid rgba(255, 50, 150, 0.4);
   border-radius: 4px;
-  background: #5a3a3a;
-  color: #e0e0e0;
+  background: rgba(255, 50, 150, 0.12);
+  color: #ff80bf;
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
 .popup-close:hover {
-  background: #8b4513;
+  background: rgba(255, 50, 150, 0.28);
+  border-color: rgba(255, 50, 150, 0.6);
+  box-shadow: 0 0 12px rgba(255, 50, 150, 0.25);
 }
 
 .popup-title {
   flex: 1;
   text-align: center;
+  letter-spacing: 0.06em;
 }
 
 .popup-content {
@@ -401,6 +451,7 @@ body.google-only .terminal-drag-wrapper {
   min-height: 0;
   padding: 16px;
   overflow: auto;
+  background: linear-gradient(180deg, rgba(12, 11, 18, 0.6) 0%, rgba(10, 9, 16, 0.8) 100%);
 }
 
 .popup-resize-handle {
@@ -420,8 +471,8 @@ body.google-only .terminal-drag-wrapper {
   bottom: 6px;
   width: 10px;
   height: 10px;
-  border-right: 2px solid #666;
-  border-bottom: 2px solid #666;
+  border-right: 2px solid rgba(0, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.35);
 }
 
 /* Timer popup: progress bar and display */
@@ -429,40 +480,45 @@ body.google-only .terminal-drag-wrapper {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
   font-size: 32px;
   font-weight: 600;
-  color: #e8e8e8;
+  color: #c8f0f0;
   text-align: center;
   margin-bottom: 16px;
   letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
 }
 
 .timer-popup .timer-display.timer-finished {
-  color: #ff6b6b;
+  color: #ff88aa;
+  text-shadow: 0 0 20px rgba(255, 100, 150, 0.4);
   font-size: 24px;
 }
 
 .timer-popup .timer-progress-track {
   height: 12px;
-  background: #2a2a2a;
+  background: rgba(0, 20, 30, 0.8);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 20px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.1);
 }
 
 .timer-popup .timer-progress-fill {
   height: 100%;
   border-radius: 6px;
-  background: linear-gradient(90deg, #489248 0%, #6bc96b 100%);
+  background: linear-gradient(90deg, #00c8aa 0%, #00ffcc 100%);
   transition: width 0.3s ease;
-  box-shadow: 0 0 10px rgba(72, 146, 72, 0.4);
+  box-shadow: 0 0 14px rgba(0, 255, 200, 0.4);
 }
 
 .timer-popup .timer-progress-fill.timer-low {
-  background: linear-gradient(90deg, #c9a227 0%, #e6c04a 100%);
+  background: linear-gradient(90deg, #e0b030 0%, #ffdd44 100%);
+  box-shadow: 0 0 14px rgba(255, 200, 50, 0.35);
 }
 
 .timer-popup .timer-progress-fill.timer-critical {
-  background: linear-gradient(90deg, #cc3333 0%, #e85555 100%);
+  background: linear-gradient(90deg, #ff4466 0%, #ff88aa 100%);
+  box-shadow: 0 0 14px rgba(255, 80, 120, 0.4);
 }
 
 .timer-popup .timer-actions {
@@ -476,16 +532,16 @@ body.google-only .terminal-drag-wrapper {
   cursor: pointer;
   font-family: 'SF Mono', Consolas, Monaco, monospace;
   font-size: 14px;
-  background: #3a3a3a;
-  color: #e0e0e0;
-  border: 1px solid #555;
+  background: linear-gradient(180deg, rgba(0, 200, 220, 0.2) 0%, rgba(0, 150, 180, 0.15) 100%);
+  color: #a0e8f0;
+  border: 1px solid rgba(0, 255, 255, 0.3);
   border-radius: 6px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .timer-popup .timer-btn:hover {
-  background: #4a4a4a;
-  color: #fff;
+  background: linear-gradient(180deg, rgba(0, 220, 240, 0.28) 0%, rgba(0, 180, 200, 0.2) 100%);
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.2);
 }
 
 .timer-popup .timer-btn:disabled {
@@ -500,17 +556,19 @@ body.google-only .terminal-drag-wrapper {
 
 .popup-clock .clock-digital {
   font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-size: clamp(0.875rem, 9cqw, 2.5rem);
   font-weight: 300;
-  color: #f0f0f0;
+  color: #c8f0f0;
   text-align: center;
   letter-spacing: 0.15em;
   padding: 20px 16px;
-  background: linear-gradient(145deg, #2d2d2d 0%, #252525 100%);
+  background: linear-gradient(145deg, rgba(0, 40, 50, 0.6) 0%, rgba(0, 25, 35, 0.8) 100%);
   border-radius: 12px;
-  border: 1px solid #3a3a3a;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(0, 255, 255, 0.06), 0 0 20px rgba(0, 255, 255, 0.05);
   margin-bottom: 14px;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
 }
 
 .popup-clock .clock-analog {
@@ -522,9 +580,9 @@ body.google-only .terminal-drag-wrapper {
   display: block;
   margin: 0 auto;
   border-radius: 50%;
-  background: linear-gradient(145deg, #2d2d2d 0%, #252525 100%);
-  border: 2px solid #3a3a3a;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+  background: linear-gradient(145deg, rgba(0, 40, 50, 0.5) 0%, rgba(0, 25, 35, 0.7) 100%);
+  border: 2px solid rgba(0, 255, 255, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 255, 255, 0.08), inset 0 1px 0 rgba(0, 255, 255, 0.06);
 }
 
 .popup-clock .timer-btn {
@@ -534,13 +592,15 @@ body.google-only .terminal-drag-wrapper {
   padding: 10px 16px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  background: linear-gradient(180deg, #404040 0%, #353535 100%);
-  border: 1px solid #4a4a4a;
+  background: linear-gradient(180deg, rgba(0, 200, 220, 0.18) 0%, rgba(0, 150, 180, 0.12) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  color: #a0e8f0;
 }
 
 .popup-clock .timer-btn:hover {
-  background: linear-gradient(180deg, #4a4a4a 0%, #404040 100%);
-  border-color: #555;
+  background: linear-gradient(180deg, rgba(0, 220, 240, 0.28) 0%, rgba(0, 180, 200, 0.2) 100%);
+  border-color: rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.15);
 }
 
 /* Date popup */
@@ -550,49 +610,67 @@ body.google-only .terminal-drag-wrapper {
 
 .popup-date .date-display {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  font-size: clamp(0.75rem, 5.5cqw, 1.75rem);
   font-weight: 400;
-  color: #f2f2f2;
+  color: #d8e8f0;
   text-align: center;
   line-height: 1.4;
   padding: 24px 20px;
   margin-bottom: 14px;
   letter-spacing: 0.02em;
-  background: linear-gradient(145deg, #2d2d2d 0%, #252525 100%);
+  background: linear-gradient(145deg, rgba(30, 25, 50, 0.6) 0%, rgba(20, 18, 40, 0.8) 100%);
   border-radius: 12px;
-  border: 1px solid #3a3a3a;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  border: 1px solid rgba(180, 100, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 24px rgba(138, 43, 226, 0.06);
 }
 
-.popup-date .date-format-select {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  font-family: 'SF Mono', Consolas, Monaco, monospace;
-  font-size: 13px;
-  background: linear-gradient(180deg, #383838 0%, #303030 100%);
-  color: #e8e8e8;
-  border: 1px solid #454545;
+.popup-date .date-format-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.popup-date .date-format-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #b0e0e8;
+  background: linear-gradient(180deg, rgba(0, 40, 50, 0.5) 0%, rgba(0, 30, 40, 0.6) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.2);
   border-radius: 8px;
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
-.popup-date .date-format-select:hover {
-  border-color: #555;
+.popup-date .date-format-arrow:hover {
+  border-color: rgba(0, 255, 255, 0.35);
+  color: #00ffcc;
 }
 
-.popup-date .date-format-select:focus {
+.popup-date .date-format-arrow:focus {
   outline: none;
-  border-color: #489248;
-  box-shadow: 0 0 0 2px rgba(72,146,72,0.2);
+  border-color: #00ffcc;
+  box-shadow: 0 0 0 2px rgba(0, 255, 204, 0.2);
 }
 
-/* Calculator popup */
+.popup-date .date-format-label {
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 12px;
+  color: #90c0d0;
+  text-align: center;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Calculator popup - orange / red / yellow */
 .popup-calc {
   padding: 4px 0;
 }
@@ -607,11 +685,11 @@ body.google-only .terminal-drag-wrapper {
   font-weight: 300;
   text-align: right;
   letter-spacing: 0.05em;
-  background: linear-gradient(145deg, #1e2a1e 0%, #182218 100%);
-  color: #b8e0b8;
-  border: 1px solid #2a3a2a;
+  background: linear-gradient(145deg, rgba(50, 25, 15, 0.9) 0%, rgba(35, 15, 10, 0.95) 100%);
+  color: #ffdd88;
+  border: 1px solid rgba(255, 140, 60, 0.35);
   border-radius: 10px;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.25);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 120, 40, 0.08);
 }
 
 .popup-calc .calc-grid {
@@ -625,36 +703,37 @@ body.google-only .terminal-drag-wrapper {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
   font-size: 1.05rem;
   font-weight: 500;
-  background: linear-gradient(180deg, #404040 0%, #363636 100%);
-  color: #f0f0f0;
-  border: 1px solid #4a4a4a;
+  background: linear-gradient(180deg, rgba(220, 100, 50, 0.4) 0%, rgba(180, 70, 30, 0.5) 100%);
+  color: #ffe8c0;
+  border: 1px solid rgba(255, 150, 80, 0.4);
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.05s ease, box-shadow 0.15s ease;
-  box-shadow: 0 2px 0 #2a2a2a;
+  transition: transform 0.05s ease, box-shadow 0.15s ease, border-color 0.15s;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .popup-calc .calc-btn:hover {
-  background: linear-gradient(180deg, #4a4a4a 0%, #404040 100%);
-  border-color: #555;
-  box-shadow: 0 3px 0 #2a2a2a, 0 1px 3px rgba(0,0,0,0.2);
+  background: linear-gradient(180deg, rgba(255, 160, 80, 0.5) 0%, rgba(230, 120, 50, 0.6) 100%);
+  border-color: rgba(255, 180, 100, 0.5);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 16px rgba(255, 140, 60, 0.2);
 }
 
 .popup-calc .calc-btn:active {
   transform: translateY(1px);
-  box-shadow: 0 1px 0 #2a2a2a;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .popup-calc .calc-btn-c {
   grid-column: span 4;
   padding: 10px;
-  background: linear-gradient(180deg, #5c3a3a 0%, #4a3030 100%);
-  border-color: #6a4040;
-  color: #f0d0d0;
+  background: linear-gradient(180deg, rgba(180, 50, 40, 0.5) 0%, rgba(140, 35, 30, 0.6) 100%);
+  border-color: rgba(220, 80, 60, 0.5);
+  color: #ffccc0;
 }
 
 .popup-calc .calc-btn-c:hover {
-  background: linear-gradient(180deg, #6a4545 0%, #5c3a3a 100%);
+  background: linear-gradient(180deg, rgba(200, 60, 50, 0.6) 0%, rgba(160, 40, 35, 0.7) 100%);
+  box-shadow: 0 0 16px rgba(220, 80, 60, 0.25);
 }
 
 /* Calendar popup */
@@ -662,9 +741,10 @@ body.google-only .terminal-drag-wrapper {
   font-family: 'SF Mono', Consolas, Monaco, monospace;
   font-size: 16px;
   font-weight: 600;
-  color: #e8e8e8;
+  color: #a0e0e8;
   text-align: center;
   margin-bottom: 12px;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
 }
 
 .popup-calendar .calendar-header,
@@ -683,16 +763,24 @@ body.google-only .terminal-drag-wrapper {
   font-size: 13px;
   text-align: center;
   padding: 4px 0;
-  color: #c0c0c0;
+  color: #a0d0d8;
 }
 
 .popup-calendar .calendar-cell.calendar-head {
-  color: #888;
+  color: #00ccaa;
   font-weight: 600;
 }
 
 .popup-calendar .calendar-cell.calendar-empty {
-  color: #555;
+  color: rgba(0, 200, 200, 0.25);
+}
+
+.popup-calendar .calendar-cell.calendar-today {
+  background: rgba(0, 255, 255, 0.25);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 .popup-calendar .calendar-grid {
@@ -702,7 +790,41 @@ body.google-only .terminal-drag-wrapper {
 .popup-calendar .calendar-nav {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+}
+
+.popup-calendar .calendar-today-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  background: linear-gradient(180deg, rgba(0, 200, 220, 0.25) 0%, rgba(0, 150, 180, 0.2) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 6px;
+  color: #a0e8f0;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.popup-calendar .calendar-today-btn:hover {
+  background: linear-gradient(180deg, rgba(0, 220, 240, 0.35) 0%, rgba(0, 180, 200, 0.28) 100%);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.25);
+}
+
+.popup-calendar .timer-btn {
+  background: linear-gradient(180deg, rgba(0, 200, 220, 0.2) 0%, rgba(0, 150, 180, 0.15) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  color: #a0e8f0;
+}
+
+.popup-calendar .timer-btn:hover {
+  background: linear-gradient(180deg, rgba(0, 220, 240, 0.28) 0%, rgba(0, 180, 200, 0.2) 100%);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
 }
 
 .terminal-form {
@@ -715,17 +837,28 @@ body.google-only .terminal-drag-wrapper {
   align-self: flex-end;
 }
 
+.terminal-form-row {
+  flex-shrink: 0;
+  position: relative;
+  width: 100%;
+}
+
 .terminal-tab-options {
   display: none;
-  margin-bottom: 4px;
-  margin-top: 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  margin-bottom: 0;
   padding-left: 0;
   list-style: none;
-  align-self: flex-start;
   width: 100%;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0 2em;
+  background: #4a4a4a;
+  z-index: 2;
 }
 
 .terminal-tab-options.terminal-tab-options-visible {
