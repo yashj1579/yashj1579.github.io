@@ -281,7 +281,7 @@ body.google-only .terminal-drag-wrapper {
 
 .terminal-search {
   background: #4a4a4a;
-  padding: 16px 20px 20px 16px;
+  padding: 16px 20px 20px -4px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -433,7 +433,7 @@ body.google-only .terminal-drag-wrapper {
     padding: 8px 12px;
   }
   .terminal-search {
-    padding: 12px 14px 16px 12px;
+    padding: 12px 14px 16px 6px;
   }
   .terminal-prompt {
     font-size: 15px;

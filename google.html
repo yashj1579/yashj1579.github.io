@@ -11,7 +11,7 @@ classes: [google-only]
 
 <div class="terminal-drag-wrapper" id="terminal-drag-wrapper">
   <div class="terminal-window" id="terminal-window">
-    <div class="terminal-titlebar" id="terminal-titlebar">yashjain — -zsh</div>
+    <div class="terminal-titlebar" id="terminal-titlebar">yashjain — -ysh</div>
     <div class="terminal-search">
       <div class="terminal-output" id="terminal-output"></div>
       <div class="terminal-tab-options" id="terminal-tab-options"></div>
@@ -32,8 +32,8 @@ classes: [google-only]
   var width, height;
   var particles = [];
   var mouseX = -1000, mouseY = -1000;
-  var influenceRadius = 75;
-  var forceFactor = 75;
+  var influenceRadius = 100;
+  var forceFactor = 300;
   var defaultPalette = [
     { r: 230, g: 80, b: 60 },
     { r: 240, g: 120, b: 50 },
@@ -58,7 +58,8 @@ classes: [google-only]
           y: (i + 0.5) * (height / rows),
           baseX: (j + 0.5) * (width / cols),
           baseY: (i + 0.5) * (height / rows),
-          colorIndex: (i + j) % currentPalette.length
+          colorIndex: Math.floor(Math.random() * currentPalette.length),
+          radius: 1 + Math.random() * 2.5
         });
       }
     }
@@ -68,23 +69,25 @@ classes: [google-only]
     if (!ctx || !width || !height) return requestAnimationFrame(anim);
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, width, height);
+    var springStrength = 0.15;
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
       var dx = mouseX - p.x;
       var dy = mouseY - p.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
+      var fx = (p.baseX - p.x) * springStrength;
+      var fy = (p.baseY - p.y) * springStrength;
       if (dist < influenceRadius && dist > 0) {
         var f = (1 - dist / influenceRadius) * forceFactor / 100;
-        p.x = p.x - (dx / dist) * f;
-        p.y = p.y - (dy / dist) * f;
-      } else {
-        p.x = p.x + (p.baseX - p.x) * 0.08;
-        p.y = p.y + (p.baseY - p.y) * 0.08;
+        fx -= (dx / dist) * f;
+        fy -= (dy / dist) * f;
       }
+      p.x += fx;
+      p.y += fy;
       var c = currentPalette[p.colorIndex % currentPalette.length];
       ctx.fillStyle = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       ctx.fill();
     }
     requestAnimationFrame(anim);
@@ -133,6 +136,14 @@ classes: [google-only]
     forceFactor = Math.max(0, Number(f));
   };
 
+  window.getParticleRadius = function() {
+    return influenceRadius;
+  };
+
+  window.getParticleForce = function() {
+    return forceFactor;
+  };
+
   window.addEventListener('resize', resize);
   resize();
   requestAnimationFrame(anim);
@@ -174,6 +185,8 @@ classes: [google-only]
     outputEl.scrollTop = outputEl.scrollHeight;
   }
 
+  var commandHistory = [];
+  var historyIndex = -1;
   var dragStartX, dragStartY, dragStartLeft, dragStartTop;
   var resizeStartX, resizeStartY, resizeStartW, resizeStartH;
   var minW = 400, minH = 280;
@@ -184,10 +197,12 @@ classes: [google-only]
     'color default',
     'color gradient',
     'color #rrggbb',
+
     'whoami',
     'radius',
     'distort',
     'force',
+
     'mail',
     'github',
     'linkedin',
@@ -196,9 +211,11 @@ classes: [google-only]
     'slides',
     'sheets',
     'website',
+
     'echo',
     'history',
     'ip',
+    'clear',
   ];
 
   function getCompletions(prefix) {
@@ -242,13 +259,36 @@ classes: [google-only]
       } else {
         hideTabOptions();
       }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (commandHistory.length === 0) return;
+      if (historyIndex === -1) {
+        historyIndex = commandHistory.length - 1;
+      } else if (historyIndex > 0) {
+        historyIndex--;
+      }
+      input.value = commandHistory[historyIndex];
+      hideTabOptions();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex === -1) return;
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++;
+        input.value = commandHistory[historyIndex];
+      } else {
+        historyIndex = -1;
+        input.value = '';
+      }
+      hideTabOptions();
     } else {
+      historyIndex = -1;
       hideTabOptions();
     }
   });
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
+    historyIndex = -1;
     var raw = input.value.trim();
     var displayLine = raw;
     var forceSearch = false;
@@ -262,26 +302,26 @@ classes: [google-only]
       form.submit();
       return;
     }
+    commandHistory.push(raw);
     var historyMatch = /^history\s*$/.exec(raw);
     var historyLMatch = /^history\s+-l\s+(\d+)\s*$/.exec(raw);
+    if (/^clear\s*$/.test(raw)) {
+      if (outputEl) outputEl.innerHTML = '';
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (historyMatch) {
-      var len = typeof window.history !== 'undefined' && typeof window.history.length === 'number' ? window.history.length : 0;
-      appendOutput('history', [
-        'Browser history is private — sites cannot read your visited URLs.',
-        'This tab\'s session length: ' + len + ' entries.'
-      ]);
+      appendOutput('history', commandHistory.slice());
       input.value = '';
       hideTabOptions();
       return;
     }
     if (historyLMatch) {
       var n = parseInt(historyLMatch[1], 10);
-      var len = typeof window.history !== 'undefined' && typeof window.history.length === 'number' ? window.history.length : 0;
-      var show = isNaN(n) || n < 1 ? 5 : Math.min(n, len);
-      appendOutput(raw, [
-        'Browser history is private — sites cannot read your visited URLs.',
-        'Last ' + show + ' entries (this tab): length only — ' + len + ' total.'
-      ]);
+      var lastN = isNaN(n) || n < 1 ? 5 : Math.min(n, commandHistory.length);
+      var lines = commandHistory.slice(-lastN);
+      appendOutput(raw, lines);
       input.value = '';
       hideTabOptions();
       return;
@@ -370,6 +410,8 @@ classes: [google-only]
       return;
     }
     var singleHex = /^color\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
+    var radiusOnlyMatch = /^radius\s*$/.exec(raw);
+    var forceOnlyMatch = /^force\s*$/.exec(raw);
     var radiusMatch = /^radius\s+(\d+)\s*$/.exec(raw);
     var resetMatch = /^color\s+reset\s*$/.exec(raw);
     var defaultMatch = /^color\s+default\s*$/.exec(raw);
@@ -388,6 +430,18 @@ classes: [google-only]
       appendOutput(raw, []);
       window.updateParticleColors('single', '#' + singleHex[1]);
       appendOutput('color #' + singleHex[1], []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (radiusOnlyMatch && typeof window.getParticleRadius === 'function') {
+      appendOutput('radius', [String(window.getParticleRadius())]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (forceOnlyMatch && typeof window.getParticleForce === 'function') {
+      appendOutput('force', [String(window.getParticleForce())]);
       input.value = '';
       hideTabOptions();
       return;
@@ -457,7 +511,7 @@ classes: [google-only]
     var lineH = 20;
     var cols = Math.max(10, Math.floor((r.width - 36) / charW));
     var rows = Math.max(5, Math.floor((r.height - 120) / lineH));
-    titlebar.textContent = 'yashjain — -zsh - ' + cols + '\u00d7' + rows;
+    titlebar.textContent = 'yashjain — -ysh - ' + cols + '\u00d7' + rows;
   }
 
   function initPosition() {
