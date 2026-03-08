@@ -472,6 +472,16 @@ classes: [google-only]
     'calculator',
     'calendar',
     'calender',
+    'battery',
+    'charge',
+    'temperature',
+    'temp',
+    'hot',
+    'cold',
+    'weather',
+    'random',
+    'random -d',
+    'random -pick',
   ];
 
   function getCompletions(prefix) {
@@ -1265,6 +1275,353 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
+    if (/^(?:battery|charge)\s*$/.test(raw)) {
+      appendOutput(raw, []);
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-battery';
+      var statusEl = document.createElement('div');
+      statusEl.className = 'battery-status';
+      var pctEl = document.createElement('div');
+      pctEl.className = 'battery-pct';
+      var barWrap = document.createElement('div');
+      barWrap.className = 'battery-bar-wrap';
+      var barFill = document.createElement('div');
+      barFill.className = 'battery-bar-fill';
+      barWrap.appendChild(barFill);
+      var labelEl = document.createElement('div');
+      labelEl.className = 'battery-label';
+      contentBox.appendChild(statusEl);
+      contentBox.appendChild(pctEl);
+      contentBox.appendChild(barWrap);
+      contentBox.appendChild(labelEl);
+      function updateBattery(b) {
+        var pct = b ? Math.round(b.level * 100) : 0;
+        var charging = b ? b.charging : false;
+        var timeLeft = b && !charging && b.dischargingTime !== Infinity ? Math.round(b.dischargingTime / 60) : null;
+        var timeFull = b && charging && b.chargingTime !== Infinity ? Math.round(b.chargingTime / 60) : null;
+        pctEl.textContent = pct + '%';
+        barFill.style.width = pct + '%';
+        barFill.classList.remove('battery-low', 'battery-critical', 'battery-charging');
+        if (charging) barFill.classList.add('battery-charging');
+        else if (pct <= 15) barFill.classList.add('battery-critical');
+        else if (pct <= 25) barFill.classList.add('battery-low');
+        statusEl.textContent = charging ? 'Charging' : (pct <= 15 ? 'Low' : 'Not charging');
+        if (charging && timeFull != null) labelEl.textContent = 'Full in ~' + timeFull + ' min';
+        else if (!charging && timeLeft != null) labelEl.textContent = '~' + timeLeft + ' min remaining';
+        else labelEl.textContent = charging ? 'Calculating...' : '';
+      }
+      if (navigator.getBattery) {
+        navigator.getBattery().then(function(b) {
+          updateBattery(b);
+          b.addEventListener('chargingchange', function() { updateBattery(b); });
+          b.addEventListener('levelchange', function() { updateBattery(b); });
+          b.addEventListener('chargingtimechange', function() { updateBattery(b); });
+          b.addEventListener('dischargingtimechange', function() { updateBattery(b); });
+        }).catch(function() {
+          statusEl.textContent = 'Unavailable';
+          pctEl.textContent = '—';
+          labelEl.textContent = 'Battery API not supported or denied';
+        });
+      } else {
+        statusEl.textContent = 'Unavailable';
+        pctEl.textContent = '—';
+        labelEl.textContent = 'Battery API not supported';
+      }
+      createPopupWindow('Battery', contentBox, null, { width: 320, height: 240, topOffset: 80, leftOffset: 0, minW: 280, minH: 200 });
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^(?:temperature|temp|hot|cold)\s*$/.test(raw)) {
+      appendOutput(raw, []);
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-temperature';
+      var loadingEl = document.createElement('div');
+      loadingEl.className = 'temp-loading';
+      loadingEl.textContent = 'Getting temperature...';
+      var labelEl = document.createElement('div');
+      labelEl.className = 'temp-label';
+      labelEl.textContent = 'Outside';
+      var valueEl = document.createElement('div');
+      valueEl.className = 'temp-value';
+      var unitEl = document.createElement('div');
+      unitEl.className = 'temp-unit';
+      unitEl.textContent = '\u00b0C';
+      var textWrap = document.createElement('div');
+      textWrap.className = 'temp-text-wrap';
+      textWrap.appendChild(valueEl);
+      textWrap.appendChild(unitEl);
+      var thermoWrap = document.createElement('div');
+      thermoWrap.className = 'temp-thermo-wrap';
+      thermoWrap.title = 'Tap to switch \u00b0C / \u00b0F';
+      var thermoTube = document.createElement('div');
+      thermoTube.className = 'temp-thermo-tube';
+      var thermoFill = document.createElement('div');
+      thermoFill.className = 'temp-thermo-fill';
+      thermoTube.appendChild(thermoFill);
+      var thermoBulb = document.createElement('div');
+      thermoBulb.className = 'temp-thermo-bulb';
+      thermoWrap.appendChild(thermoTube);
+      thermoWrap.appendChild(thermoBulb);
+      var displayRow = document.createElement('div');
+      displayRow.className = 'temp-display-row';
+      displayRow.appendChild(textWrap);
+      displayRow.appendChild(thermoWrap);
+      var hintEl = document.createElement('div');
+      hintEl.className = 'temp-thermo-hint';
+      hintEl.textContent = 'Tap thermometer for \u00b0F / \u00b0C';
+      contentBox.appendChild(loadingEl);
+      contentBox.appendChild(labelEl);
+      contentBox.appendChild(displayRow);
+      contentBox.appendChild(hintEl);
+      contentBox.classList.add('popup-temperature--loading');
+      createPopupWindow('Temperature', contentBox, null, { width: 220, height: 260, topOffset: 80, leftOffset: 0, minW: 200, minH: 220 });
+      var tempC = null;
+      var useCelsius = true;
+      function updateDisplay() {
+        if (tempC == null) return;
+        var minC = -10, maxC = 50;
+        var pct = Math.max(0, Math.min(100, ((tempC - minC) / (maxC - minC)) * 100));
+        thermoFill.style.height = pct + '%';
+        if (useCelsius) {
+          valueEl.textContent = Math.round(tempC * 10) / 10;
+          unitEl.textContent = '\u00b0C';
+        } else {
+          var f = tempC * 9 / 5 + 32;
+          valueEl.textContent = Math.round(f * 10) / 10;
+          unitEl.textContent = '\u00b0F';
+        }
+      }
+      thermoWrap.addEventListener('click', function() {
+        if (tempC == null) return;
+        useCelsius = !useCelsius;
+        updateDisplay();
+      });
+      function showTempOnly(c) {
+        loadingEl.style.display = 'none';
+        contentBox.classList.remove('popup-temperature--loading');
+        tempC = c;
+        updateDisplay();
+      }
+      function tryFetchTemp(lat, lon) {
+        var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m';
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+          var cur = data.current;
+          if (cur && typeof cur.temperature_2m === 'number') {
+            showTempOnly(cur.temperature_2m);
+          } else {
+            loadingEl.textContent = 'Temperature unavailable';
+          }
+        }).catch(function() {
+          loadingEl.textContent = 'Could not fetch temperature';
+        });
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(pos) { tryFetchTemp(pos.coords.latitude, pos.coords.longitude); },
+          function() { tryFetchTemp(-33.8688, 151.2093); }
+        );
+      } else {
+        tryFetchTemp(-33.8688, 151.2093);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^weather\s*$/.test(raw)) {
+      appendOutput(raw, []);
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-weather';
+      var loadingEl = document.createElement('div');
+      loadingEl.className = 'weather-loading';
+      loadingEl.textContent = 'Getting weather...';
+      var imgEl = document.createElement('img');
+      imgEl.className = 'weather-icon';
+      imgEl.alt = '';
+      var descEl = document.createElement('div');
+      descEl.className = 'weather-desc';
+      var detailsEl = document.createElement('div');
+      detailsEl.className = 'weather-details';
+      contentBox.appendChild(loadingEl);
+      contentBox.appendChild(imgEl);
+      contentBox.appendChild(descEl);
+      contentBox.appendChild(detailsEl);
+      createPopupWindow('Weather', contentBox, null, { width: 320, height: 420, topOffset: 80, leftOffset: 0, minW: 280, minH: 380 });
+      function weatherCodeToImage(code, windSpeed) {
+        if (windSpeed >= 40) return 'windy.png';
+        if (code === 0) return 'clear.png';
+        if (code === 1) return 'mostly_clear.png';
+        if (code === 2) return 'partly_cloudy.png';
+        if (code === 3) return 'overcast.png';
+        if (code === 45 || code === 48) return 'fog.png';
+        if (code === 51 || code === 52 || code === 53 || code === 56 || code === 57 || code === 61 || code === 63 || code === 65 || code === 66 || code === 67 || code === 80 || code === 81 || code === 82) return 'rain.png';
+        if (code === 71 || code === 73 || code === 75 || code === 77 || code === 85 || code === 86) return 'snow.png';
+        if (code === 68 || code === 69 || code === 83 || code === 84) return 'sleet.png';
+        if (code === 95) return 'thunderstorm.png';
+        if (code === 96 || code === 99) return 'severe_storm.png';
+        if (code === 55 || code === 56 || code === 57) return 'haze.png';
+        return 'partly_cloudy.png';
+      }
+      function weatherCodeToDesc(code) {
+        var d = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Foggy', 48: 'Rime fog', 51: 'Light drizzle', 52: 'Drizzle', 53: 'Dense drizzle', 56: 'Freezing drizzle', 57: 'Dense freezing drizzle', 61: 'Slight rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Light freezing rain', 67: 'Freezing rain', 71: 'Slight snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Slight rain showers', 81: 'Rain showers', 82: 'Heavy rain showers', 83: 'Slight snow showers', 84: 'Snow showers', 85: 'Slight snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Severe thunderstorm' };
+        return d[code] || 'Unknown';
+      }
+      function showWeather(data) {
+        loadingEl.style.display = 'none';
+        var cur = data.current;
+        var code = cur.weather_code || 0;
+        var windSpeed = cur.wind_speed_10m;
+        descEl.textContent = weatherCodeToDesc(code);
+        imgEl.src = '/assets/weather/' + weatherCodeToImage(code, windSpeed);
+        imgEl.style.display = 'block';
+        var lines = [];
+        if (data.hourly && data.hourly.precipitation_probability && data.hourly.precipitation_probability[0] != null) {
+          lines.push('Chance of rain: ' + data.hourly.precipitation_probability[0] + '%');
+        }
+        if (cur.precipitation != null) {
+          lines.push('Precipitation: ' + cur.precipitation + ' mm');
+        }
+        if (cur.cloud_cover != null) {
+          lines.push('Cloud cover: ' + cur.cloud_cover + '%');
+        }
+        if (cur.relative_humidity_2m != null) {
+          lines.push('Humidity: ' + cur.relative_humidity_2m + '%');
+        }
+        if (cur.wind_speed_10m != null) {
+          lines.push('Wind: ' + cur.wind_speed_10m + ' km/h');
+        }
+        if (cur.pressure_msl != null) {
+          lines.push('Pressure: ' + Math.round(cur.pressure_msl) + ' hPa');
+        }
+        detailsEl.innerHTML = '';
+        lines.forEach(function(line) {
+          var p = document.createElement('div');
+          p.className = 'weather-detail-line';
+          p.textContent = line;
+          detailsEl.appendChild(p);
+        });
+      }
+      function tryFetchWeather(lat, lon) {
+        var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=weather_code,precipitation,relative_humidity_2m,cloud_cover,wind_speed_10m,pressure_msl&hourly=precipitation_probability';
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+          if (data.current && data.current.weather_code != null) {
+            showWeather(data);
+          } else {
+            loadingEl.textContent = 'Weather unavailable';
+          }
+        }).catch(function() {
+          loadingEl.textContent = 'Could not fetch weather';
+        });
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(pos) { tryFetchWeather(pos.coords.latitude, pos.coords.longitude); },
+          function() { tryFetchWeather(-33.8688, 151.2093); }
+        );
+      } else {
+        tryFetchWeather(-33.8688, 151.2093);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var randomPickMatch = /^random\s+-pick\s+(.+)$/.exec(raw);
+    var randomDoubleMatch = /^random\s+-d\s*$/.exec(raw);
+    var randomRangeMatch = /^random\s+(\d+)\s+(\d+)\s*$/.exec(raw);
+    var randomSingleMatch = /^random\s+(\d+)\s*$/.exec(raw);
+    var randomNoArgMatch = /^random\s*$/.exec(raw);
+    if (randomPickMatch) {
+      var items = randomPickMatch[1].trim().split(/\s+/).filter(Boolean);
+      var picked = items.length ? items[Math.floor(Math.random() * items.length)] : '';
+      appendOutput(raw, [picked || '(no items)']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (randomDoubleMatch) {
+      var d = Math.random();
+      appendOutput(raw, [String(d)]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (randomRangeMatch) {
+      var a = parseInt(randomRangeMatch[1], 10);
+      var b = parseInt(randomRangeMatch[2], 10);
+      if (a > b) { var t = a; a = b; b = t; }
+      var n = a + Math.floor(Math.random() * (b - a + 1));
+      appendOutput(raw, [String(n)]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (randomSingleMatch) {
+      var max = Math.max(1, parseInt(randomSingleMatch[1], 10));
+      var n = 1 + Math.floor(Math.random() * max);
+      appendOutput(raw, [String(n)]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (randomNoArgMatch) {
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-random';
+      contentBox.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+      contentBox.addEventListener('click', function(e) { e.stopPropagation(); });
+      var titleEl = document.createElement('div');
+      titleEl.className = 'random-title';
+      titleEl.textContent = 'Random';
+      var resultEl = document.createElement('div');
+      resultEl.className = 'random-result';
+      resultEl.textContent = '\u2014';
+      var btn120 = document.createElement('button');
+      btn120.type = 'button';
+      btn120.className = 'random-btn';
+      btn120.textContent = 'Random Number 1\u201320';
+      btn120.addEventListener('click', function() { resultEl.textContent = String(1 + Math.floor(Math.random() * 20)); });
+      var btnDouble = document.createElement('button');
+      btnDouble.type = 'button';
+      btnDouble.className = 'random-btn';
+      btnDouble.textContent = '0\u20131 double';
+      btnDouble.addEventListener('click', function() { resultEl.textContent = Math.random().toFixed(5); });
+      var rangeWrap = document.createElement('div');
+      rangeWrap.className = 'random-range-wrap';
+      var rangeFrom = document.createElement('input');
+      rangeFrom.type = 'number';
+      rangeFrom.placeholder = 'From';
+      rangeFrom.className = 'random-input';
+      rangeFrom.value = '1';
+      var rangeTo = document.createElement('input');
+      rangeTo.type = 'number';
+      rangeTo.placeholder = 'To';
+      rangeTo.className = 'random-input';
+      rangeTo.value = '100';
+      var rangeBtn = document.createElement('button');
+      rangeBtn.type = 'button';
+      rangeBtn.className = 'random-btn';
+      rangeBtn.textContent = 'Generate';
+      rangeBtn.addEventListener('click', function() {
+        var from = parseInt(rangeFrom.value, 10);
+        var to = parseInt(rangeTo.value, 10);
+        if (isNaN(from)) from = 1;
+        if (isNaN(to)) to = 100;
+        if (from > to) { var t = from; from = to; to = t; }
+        resultEl.textContent = String(from + Math.floor(Math.random() * (to - from + 1)));
+      });
+      rangeWrap.appendChild(rangeFrom);
+      rangeWrap.appendChild(rangeTo);
+      rangeWrap.appendChild(rangeBtn);
+      contentBox.appendChild(titleEl);
+      contentBox.appendChild(resultEl);
+      contentBox.appendChild(btn120);
+      contentBox.appendChild(btnDouble);
+      contentBox.appendChild(rangeWrap);
+      createPopupWindow('Random', contentBox, null, { width: 300, height: 320, topOffset: 80, leftOffset: 0 });
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (historyMatch) {
       appendOutput('history', commandHistory.slice());
       input.value = '';
@@ -1396,6 +1753,18 @@ classes: [google-only]
       return;
     }
     var convertMatch = /^convert\s+([\d.-]+)\s+(\S+)\s+(\S+)\s*$/.exec(raw);
+    var convertToMatch = /^convert\s+([\d.-]+)\s+(\S+)\s+to\s+(\S+)\s*$/.exec(raw);
+    if (convertToMatch) {
+      var conv = convertUnits(convertToMatch[1], convertToMatch[2], convertToMatch[3]);
+      if (conv === null) {
+        appendOutput(raw, ['Cannot convert those units. Use length (m, km, cm, mi, ft, in), mass (kg, g, lb, oz), temp (C, F, K), or time (s, min, h, d, week, year).']);
+      } else {
+        appendOutput(raw, [convertToMatch[1] + ' ' + convertToMatch[2] + ' = ' + conv + ' ' + convertToMatch[3]]);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (convertMatch) {
       var conv = convertUnits(convertMatch[1], convertMatch[2], convertMatch[3]);
       if (conv === null) {
@@ -1521,7 +1890,6 @@ classes: [google-only]
       var name = colorNameMatch[1].toLowerCase();
       appendOutput(raw, []);
       window.updateParticleColors(name);
-      appendOutput('color ' + name, []);
       input.value = '';
       hideTabOptions();
       return;
