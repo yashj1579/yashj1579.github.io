@@ -11,7 +11,7 @@ classes: [google-only]
 
 <div class="terminal-drag-wrapper" id="terminal-drag-wrapper">
   <div class="terminal-window" id="terminal-window">
-    <div class="terminal-titlebar" id="terminal-titlebar">yashjain — -ysh</div>
+    <div class="terminal-titlebar" id="terminal-titlebar">yashjain - -ysh</div>
     <div class="terminal-search">
       <div class="terminal-output" id="terminal-output"></div>
       <div class="terminal-form-row">
@@ -456,6 +456,10 @@ classes: [google-only]
     'history',
     'ip',
     'clear',
+    'close',
+    'popup',
+    'help',
+    'ls',
     'calc',
     'convert',
     'solve',
@@ -794,6 +798,98 @@ classes: [google-only]
     var historyLMatch = /^history\s+-l\s+(\d+)\s*$/.exec(raw);
     if (/^clear\s*$/.test(raw)) {
       if (outputEl) outputEl.innerHTML = '';
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^close\s*$/.test(raw)) {
+      var wrappers = document.querySelectorAll('.popup-wrapper');
+      wrappers.forEach(function(wrapper) {
+        var closeBtn = wrapper.querySelector('.popup-close');
+        if (closeBtn) closeBtn.click();
+        else wrapper.remove();
+      });
+      appendOutput(raw, wrappers.length ? ['Closed ' + wrappers.length + ' popup(s).'] : ['No popups open.']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^popup\s*$/.test(raw)) {
+      appendOutput(raw, []);
+      var popupCommands = ['calculator', 'calendar', 'clock', 'date', 'battery', 'temperature', 'weather', 'location', 'scratch', 'random'];
+      popupCommands.forEach(function(cmd, i) {
+        setTimeout(function() {
+          input.value = cmd;
+          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }, i * 120);
+      });
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var helpMatch = /^help\s+(.+)$/.test(raw);
+    var helpTopic = helpMatch ? /^help\s+(.+)$/.exec(raw)[1].trim().toLowerCase() : null;
+    if (/^help\s*$/.test(raw) || helpMatch) {
+      var HELP = {
+        calc: 'calc [expr] - Evaluate a math expression (e.g. calc 2+3*4). Type calc or calculator to open the calculator popup.',
+        calculator: 'calculator / calc - Open the calculator popup.',
+        calendar: 'calendar / cal / calender - Open the calendar popup.',
+        clock: 'clock / time - Open the clock popup (analog/digital).',
+        date: 'date - Open the date popup with format options.',
+        timer: 'timer [mins] / timer -s [secs] - Start a countdown timer (default 5 min).',
+        battery: 'battery / charge - Open the battery status popup.',
+        temperature: 'temperature / temp / hot / cold - Open the temperature popup (outside temp + thermometer).',
+        weather: 'weather - Open the weather conditions popup (no temperature).',
+        location: 'location - Open a map popup; enter coordinates or use My location.',
+        scratch: 'scratch / scratchpad / notes / board / write - Open a scratch pad to draw.',
+        whiteboard: 'whiteboard - Open a whiteboard (white background, black ink).',
+        blackboard: 'blackboard - Open a blackboard (black background, white ink).',
+        random: 'random - Open random number popup. random -d (double 0-1), random 1 20 (range), random -pick a b c (pick one).',
+        popup: 'popup - Open all popup windows at once (except timer).',
+        help: 'help [command] - Show this help. Use "help" for overview or "help <cmd>" for a command.',
+        close: 'close - Close all open popup windows.',
+        ls: 'ls - List all available commands.',
+        clear: 'clear - Clear the terminal output.',
+        history: 'history / history -l N - Show command history (last N with -l).',
+        echo: 'echo <text> - Print text.',
+        color: 'color [name] / color -ls / color reset - Change particle colors. Use color -ls to list palettes.',
+        whoami: 'whoami - Show username.',
+        ip: 'ip - Show IP info.',
+        convert: 'convert <num> <unit> to <unit> - Convert units (length, mass, temp, time).',
+        solve: 'solve a b c - Solve ax² + bx + c = 0.',
+        prime: 'prime <n> - Check if n is prime.',
+        divisor: 'divisor <n> - List divisors.',
+        gcd: 'gcd a b - Greatest common divisor.',
+        lcm: 'lcm a b - Least common multiple.',
+        mail: 'mail - Open mail link.',
+        github: 'github - Open GitHub.',
+        linkedin: 'linkedin - Open LinkedIn.',
+        drive: 'drive - Open Google Drive.',
+        docs: 'docs - Open Google Docs.',
+        website: 'website - Open website.'
+      };
+      if (/^help\s*$/.test(raw)) {
+        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Terminal: clear, close, history, echo, help, ls', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website'];
+        appendOutput(raw, lines);
+      } else if (helpTopic && HELP[helpTopic]) {
+        appendOutput(raw, [HELP[helpTopic]]);
+      } else if (helpTopic) {
+        var similar = Object.keys(HELP).filter(function(k) { return k.indexOf(helpTopic) >= 0 || helpTopic.indexOf(k) >= 0; });
+        appendOutput(raw, similar.length ? ['Unknown command "' + helpTopic + '". Did you mean: ' + similar.join(', ')] : ['Unknown command "' + helpTopic + '". Type help for a list.']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^ls\s*$/.test(raw)) {
+      var seen = {};
+      var list = [];
+      COMMANDS.forEach(function(c) {
+        var base = (c.split(/\s+/)[0] || '').toLowerCase();
+        if (base && !seen[base]) { seen[base] = true; list.push(base); }
+      });
+      list.sort();
+      appendOutput(raw, ['Commands: ' + list.join(', ')]);
       input.value = '';
       hideTabOptions();
       return;
@@ -1328,12 +1424,12 @@ classes: [google-only]
           b.addEventListener('dischargingtimechange', function() { updateBattery(b); });
         }).catch(function() {
           statusEl.textContent = 'Unavailable';
-          pctEl.textContent = '—';
+          pctEl.textContent = '-';
           labelEl.textContent = 'Battery API not supported or denied';
         });
       } else {
         statusEl.textContent = 'Unavailable';
-        pctEl.textContent = '—';
+        pctEl.textContent = '-';
         labelEl.textContent = 'Battery API not supported';
       }
       createPopupWindow('Battery', contentBox, null, { width: 320, height: 240, topOffset: 80, leftOffset: 0, minW: 280, minH: 200 });
@@ -2221,7 +2317,7 @@ classes: [google-only]
     var lineH = 20;
     var cols = Math.max(10, Math.floor((r.width - 36) / charW));
     var rows = Math.max(5, Math.floor((r.height - 120) / lineH));
-    titlebar.textContent = 'yashjain — -ysh - ' + cols + '\u00d7' + rows;
+    titlebar.textContent = 'yashjain - -ysh - ' + cols + '\u00d7' + rows;
   }
 
   function initPosition() {
