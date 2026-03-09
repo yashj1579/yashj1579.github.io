@@ -604,6 +604,12 @@ classes: [google-only]
     'website',
     'utexas',
     'canvas',
+    'd',
+    'u',
+    'm',
+    's',
+    'g',
+    'chat',
 
     'pwd',
     'ls',
@@ -1172,6 +1178,12 @@ classes: [google-only]
         website: 'website - Open website.',
         utexas: 'utexas / canvas - Open UT Canvas (utexas.instructure.com).',
         canvas: 'canvas / utexas - Open UT Canvas (utexas.instructure.com).',
+        d: 'd - Open Google Docs.',
+        u: 'u - Open Canvas (utexas.instructure.com).',
+        m: 'm - Open Gmail.',
+        s: 's - Open Google Sheets.',
+        g: 'g - Open GitHub.',
+        chat: 'chat - Open ChatGPT.',
         pwd: 'pwd - Print working directory.',
         cd: 'cd [path] - Change directory. cd .., cd ~, cd /',
         mkdir: 'mkdir <name> - Create directory.',
@@ -1182,7 +1194,7 @@ classes: [google-only]
         vim: 'vim list / todo / tido / planner - Open tasks. vim <url> - Open website. vim <file> - Open .txt file in same popup style (saved in browser).',
       };
       if (/^help\s*$/.test(raw)) {
-        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, type, vim', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
+        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, type, vim', '  Shortcuts: d (docs), u (canvas), m (mail), s (sheets), g (github), chat (ChatGPT)', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
         appendOutput(raw, lines);
       } else if (helpTopic && HELP[helpTopic]) {
         appendOutput(raw, [HELP[helpTopic]]);
@@ -2587,6 +2599,48 @@ classes: [google-only]
     var websiteMatch = /^website\s*$/.exec(raw);
     var utexasMatch = /^utexas\s*$/.exec(raw);
     var canvasMatch = /^canvas\s*$/.exec(raw);
+    if (/^d\s*$/.test(raw)) {
+      appendOutput('d', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://docs.google.com/');
+      return;
+    }
+    if (/^u\s*$/.test(raw)) {
+      appendOutput('u', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://utexas.instructure.com/');
+      return;
+    }
+    if (/^m\s*$/.test(raw)) {
+      appendOutput('m', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://mail.google.com/');
+      return;
+    }
+    if (/^s\s*$/.test(raw)) {
+      appendOutput('s', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://sheets.google.com/');
+      return;
+    }
+    if (/^g\s*$/.test(raw)) {
+      appendOutput('g', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://github.com');
+      return;
+    }
+    if (/^chat\s*$/.test(raw)) {
+      appendOutput('chat', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://chatgpt.com/');
+      return;
+    }
     if (websiteMatch) {
       appendOutput('website', []);
       input.value = '';

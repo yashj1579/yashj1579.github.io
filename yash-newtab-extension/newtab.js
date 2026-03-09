@@ -10,5 +10,4 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// Redirect so the terminal page loads as the top document (search + links work without iframe/postMessage)
 window.location.replace('https://yashj1579.github.io/google/');
