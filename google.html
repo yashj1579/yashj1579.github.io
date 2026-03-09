@@ -17,7 +17,7 @@ classes: [google-only]
       <div class="terminal-form-row">
         <form class="terminal-form" id="terminal-form" action="https://www.google.com/search" method="get" target="_top">
           <span class="terminal-prompt">yashjain@google $</span>
-          <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off">
+          <input type="search" class="terminal-input" name="q" id="terminal-input" placeholder="Search or type a command..." autocomplete="off" autofocus>
         </form>
         <div class="terminal-tab-options" id="terminal-tab-options"></div>
       </div>
@@ -36,6 +36,9 @@ classes: [google-only]
   var mouseX = -1000, mouseY = -1000;
   var influenceRadius = 100;
   var forceFactor = 300;
+  var lastActivityTime = Date.now();
+  var idleThreshold = 10000;
+  var idleAmount = 0;
   var defaultPalette = [
     { r: 0, g: 105, b: 148 },
     { r: 0, g: 150, b: 200 },
@@ -276,11 +279,30 @@ classes: [google-only]
 
   function anim() {
     if (!ctx || !width || !height) return requestAnimationFrame(anim);
+    var now = Date.now();
+    if (now - lastActivityTime > idleThreshold) {
+      idleAmount = Math.min(1, idleAmount + 0.012);
+    } else {
+      idleAmount = Math.max(0, idleAmount - 0.08);
+    }
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, width, height);
     var springStrength = 0.15;
+    var centerX = width / 2;
+    var centerY = height / 2;
+    var time = now * 0.0008;
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
+      if (idleAmount > 0) {
+        var px = p.x - centerX;
+        var py = p.y - centerY;
+        var len = Math.sqrt(px * px + py * py) || 1;
+        var tx = -py / len;
+        var ty = px / len;
+        var swirl = Math.sin(time + i * 0.15) * 0.5 * idleAmount;
+        p.x += tx * swirl + (Math.random() - 0.5) * 1.0 * idleAmount;
+        p.y += ty * swirl + (Math.random() - 0.5) * 1.0 * idleAmount;
+      }
       var dx = mouseX - p.x;
       var dy = mouseY - p.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
@@ -305,11 +327,14 @@ classes: [google-only]
   document.addEventListener('mousemove', function(e) {
     mouseX = e.clientX;
     mouseY = e.clientY;
+    lastActivityTime = Date.now();
   });
   document.addEventListener('mouseleave', function() {
     mouseX = -1000;
     mouseY = -1000;
   });
+  document.addEventListener('keydown', function() { lastActivityTime = Date.now(); });
+  document.addEventListener('keyup', function() { lastActivityTime = Date.now(); });
 
   window.updateParticleColors = function(mode) {
     if (mode === 'reset' || mode === 'default') {
@@ -400,7 +425,8 @@ classes: [google-only]
   function submitSearchForm() {
     if (window.parent !== window) {
       var q = (form.querySelector('input[name=q]') || input).value;
-      var url = form.action + (form.action.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q || '');
+      if (q == null) q = input.value;
+      var url = 'https://www.google.com/search?q=' + encodeURIComponent((q || '').toString());
       navigateTo(url);
     } else {
       form.submit();
@@ -414,6 +440,111 @@ classes: [google-only]
     out.textContent = text;
     outputEl.appendChild(out);
     outputEl.scrollTop = outputEl.scrollHeight;
+  }
+
+  var FS_KEY = 'yash_terminal_fs';
+  var CWD_KEY = 'yash_terminal_cwd';
+  var TASKS_KEY = 'yash_terminal_tasks';
+  function getCwd() {
+    try { return sessionStorage.getItem(CWD_KEY) || '/home'; } catch (e) { return '/home'; }
+  }
+  function setCwd(path) {
+    try { sessionStorage.setItem(CWD_KEY, path); } catch (e) {}
+  }
+  function getFs() {
+    try {
+      var s = localStorage.getItem(FS_KEY);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
+    var defaultFs = { '/': { type: 'dir' }, '/home': { type: 'dir' } };
+    try { localStorage.setItem(FS_KEY, JSON.stringify(defaultFs)); } catch (e) {}
+    return defaultFs;
+  }
+  function saveFs(fs) {
+    try { localStorage.setItem(FS_KEY, JSON.stringify(fs)); } catch (e) {}
+  }
+  function resolvePath(cwd, name) {
+    if (!name || name === '.') return cwd;
+    if (name === '..') {
+      var i = cwd.lastIndexOf('/', cwd.length - 2);
+      return i <= 0 ? '/' : cwd.slice(0, i || 1);
+    }
+    if (name === '~' || name === '~/' || name === '~\\') return '/home';
+    if (name.charAt(0) === '/') return name.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+    var base = cwd === '/' ? '' : cwd;
+    var joined = (base + '/' + name).replace(/\/+/g, '/');
+    return joined.slice(0, 2) === '//' ? joined.slice(1) : joined || '/';
+  }
+  function listDir(fs, path) {
+    path = (path || '/').replace(/\/$/, '') || '/';
+    var prefix = path === '/' ? '/' : path + '/';
+    var seen = {};
+    for (var key in fs) {
+      if (key === path || (key.indexOf(prefix) === 0 && key.length > prefix.length)) {
+        var rest = key.slice(prefix.length);
+        var name = rest.indexOf('/') >= 0 ? rest.slice(0, rest.indexOf('/')) : rest;
+        if (name && !seen[name]) { seen[name] = true; }
+      }
+    }
+    return Object.keys(seen).sort();
+  }
+  function getEntry(fs, path) {
+    path = (path || '/').replace(/\/+$/, '') || '/';
+    return fs[path];
+  }
+  function getFileContent(fs, path) {
+    var e = getEntry(fs, path);
+    return e && e.type === 'file' ? e.content : undefined;
+  }
+  function setFileContent(fs, path, content) {
+    path = (path || '').replace(/\/+$/, '');
+    if (!path) return false;
+    fs[path] = { type: 'file', content: content == null ? '' : String(content) };
+    var i = path.lastIndexOf('/');
+    while (i > 0) {
+      var parent = path.slice(0, i);
+      if (!fs[parent]) fs[parent] = { type: 'dir' };
+      i = path.lastIndexOf('/', i - 1);
+    }
+    if (!fs['/']) fs['/'] = { type: 'dir' };
+    saveFs(fs);
+    return true;
+  }
+  function mkdirFs(fs, path) {
+    path = (path || '').replace(/\/+$/, '');
+    if (!path || path === '/') return false;
+    if (fs[path]) return fs[path].type === 'dir';
+    fs[path] = { type: 'dir' };
+    var i = path.lastIndexOf('/');
+    while (i > 0) {
+      var parent = path.slice(0, i);
+      if (!fs[parent]) fs[parent] = { type: 'dir' };
+      i = path.lastIndexOf('/', i - 1);
+    }
+    if (!fs['/']) fs['/'] = { type: 'dir' };
+    saveFs(fs);
+    return true;
+  }
+  function rmFs(fs, path, recursive) {
+    path = (path || '').replace(/\/+$/, '');
+    if (!path || path === '/') return false;
+    var e = fs[path];
+    if (!e) return false;
+    if (e.type === 'dir' && !recursive) {
+      var children = listDir(fs, path);
+      if (children.length > 0) return false;
+    }
+    if (e.type === 'dir' && recursive) {
+      var prefix = path + '/';
+      var toDel = [path];
+      for (var k in fs) { if (k.indexOf(prefix) === 0) toDel.push(k); }
+      toDel.sort(function(a, b) { return b.length - a.length; });
+      toDel.forEach(function(k) { delete fs[k]; });
+    } else {
+      delete fs[path];
+    }
+    saveFs(fs);
+    return true;
   }
 
   var commandHistory = [];
@@ -471,6 +602,24 @@ classes: [google-only]
     'slides',
     'sheets',
     'website',
+    'utexas',
+    'canvas',
+
+    'pwd',
+    'ls',
+    'ls -com',
+    'cd',
+    'mkdir',
+    'touch',
+    'rm',
+    'rm -r',
+    'cat',
+    'vim',
+    'def',
+    'vim list',
+    'vim todo',
+    'vim tido',
+    'vim planner',
 
     'echo',
     'history',
@@ -518,6 +667,48 @@ classes: [google-only]
   ];
 
   function getCompletions(prefix) {
+    prefix = (prefix || '').trim();
+    var cdMatch = /^cd\s+(.*)$/.exec(prefix);
+    if (cdMatch) {
+      var pathPart = cdMatch[1];
+      var cwd = getCwd();
+      var fs = getFs();
+      var basePath = cwd;
+      var prefixName = '';
+      if (pathPart.indexOf('/') >= 0) {
+        var lastSlash = pathPart.lastIndexOf('/');
+        basePath = resolvePath(cwd, pathPart.slice(0, lastSlash) || '/');
+        prefixName = pathPart.slice(lastSlash + 1);
+      } else {
+        prefixName = pathPart;
+      }
+      var names = listDir(fs, basePath);
+      if (prefixName === '' || prefixName === '.' || prefixName === '..') {
+        names.push('..', '.', '~', '/');
+      } else {
+        if ('..'.indexOf(prefixName) === 0) names.push('..');
+        if ('.'.indexOf(prefixName) === 0) names.push('.');
+        if ('~'.indexOf(prefixName) === 0) names.push('~');
+        if ('/'.indexOf(prefixName) === 0) names.push('/');
+      }
+      var lower = prefixName.toLowerCase();
+      var matches = names.filter(function(n) { return n.toLowerCase().indexOf(lower) === 0; });
+      matches.sort();
+      var out = [];
+      for (var i = 0; i < matches.length && out.length < 10; i++) {
+        var name = matches[i];
+        if (name === '..' || name === '.' || name === '~' || name === '/') {
+          out.push('cd ' + name);
+        } else {
+          var fullPath = basePath === '/' ? '/' + name : basePath + '/' + name;
+          var e = getEntry(fs, fullPath);
+          var isDir = e && e.type === 'dir';
+          var comp = 'cd ' + (basePath === '/' ? '/' : basePath + '/') + name + (isDir ? '/' : '');
+          out.push(comp);
+        }
+      }
+      return out;
+    }
     prefix = (prefix || '').toLowerCase();
     var out = [];
     for (var i = 0; i < COMMANDS.length && out.length < 5; i++) {
@@ -656,9 +847,14 @@ classes: [google-only]
     return (a * b) / gcd(a, b);
   }
 
+  var popupZIndex = 1001;
   function createPopupWindow(title, contentEl, onClose, options) {
     var wrapper = document.createElement('div');
     wrapper.className = 'popup-wrapper';
+    wrapper.style.zIndex = popupZIndex++;
+    wrapper.addEventListener('mousedown', function() {
+      wrapper.style.zIndex = popupZIndex++;
+    });
     var win = document.createElement('div');
     win.className = 'popup-window';
     var titlebar = document.createElement('div');
@@ -756,6 +952,10 @@ classes: [google-only]
     return { wrapper: wrapper, win: win, content: content };
   }
 
+  wrapper.addEventListener('mousedown', function() {
+    wrapper.style.zIndex = popupZIndex++;
+  });
+
   input.addEventListener('keydown', function(e) {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -834,6 +1034,87 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
+    if (/^popup\s+.+/.test(raw)) {
+      var popupUrlMatch = /^popup\s+(.+)$/.exec(raw);
+      if (popupUrlMatch) {
+        var arg = popupUrlMatch[1].trim();
+        var url = null;
+        var title = 'Website';
+
+        if (arg === 'ls') {
+          appendOutput(raw, [
+            'popup desmos     - Desmos graphing calculator',
+            'popup advcalc    - Desmos scientific calculator',
+            'popup graph      - Desmos graphing (same as desmos)',
+            'popup wordle     - NYT Wordle',
+            'popup wiki <topic> - Wikipedia article',
+            'popup <url>      - Open URL in popup',
+            'popup <query>    - Google search (new window)'
+          ]);
+          input.value = '';
+          hideTabOptions();
+          return;
+        }
+
+        var wikiMatch = /^wiki\s+(.+)$/.exec(arg);
+        if (wikiMatch) {
+          var topic = wikiMatch[1].trim();
+          var slug = encodeURIComponent(topic).replace(/%20/g, '_');
+          url = 'https://en.wikipedia.org/wiki/' + slug;
+          title = 'Wikipedia';
+        } else if (arg === 'desmos' || arg === 'graph') {
+          url = 'https://www.desmos.com/';
+          title = 'Desmos';
+        } else if (arg === 'advcalc') {
+          url = 'https://www.desmos.com/scientific';
+          title = 'Desmos Scientific';
+        } else if (arg === 'wordle') {
+          url = 'https://www.nytimes.com/games/wordle/index.html';
+          title = 'Wordle';
+        }
+
+        if (!url) {
+          if (/^https?:\/\//i.test(arg)) {
+            url = arg;
+          } else if (/^[a-z0-9][-a-z0-9.]*\.[a-z0-9].*$/i.test(arg) && !/\s/.test(arg)) {
+            url = 'https://' + arg;
+          } else {
+            url = 'https://www.google.com/search?q=' + encodeURIComponent(arg);
+          }
+        }
+
+        var isGoogle = false;
+        var isNyt = false;
+        var hostname = '';
+        try {
+          var a = document.createElement('a');
+          a.href = url;
+          hostname = a.hostname || '';
+          isGoogle = hostname.indexOf('google') !== -1;
+          isNyt = hostname.indexOf('nytimes') !== -1;
+          if (!title || title === 'Website') title = hostname || 'Website';
+        } catch (err) {}
+        if (isGoogle) {
+          window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700');
+          appendOutput(raw, ['Opened in new window (Google cannot be embedded).']);
+        } else if (isNyt) {
+          window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700');
+          appendOutput(raw, ['Opened in new window.']);
+        } else {
+          var box = document.createElement('div');
+          box.style.cssText = 'flex:1;min-height:0;margin:-16px;padding:0;overflow:hidden;display:flex;flex-direction:column;';
+          var iframe = document.createElement('iframe');
+          iframe.src = url;
+          iframe.style.cssText = 'flex:1;width:100%;border:none;min-height:0;display:block;';
+          box.appendChild(iframe);
+          createPopupWindow(title, box, null, { width: 900, height: 700, minW: 400, minH: 300 });
+          appendOutput(raw, ['Opened in popup.']);
+        }
+        input.value = '';
+        hideTabOptions();
+        return;
+      }
+    }
     if (/^popup\s*$/.test(raw)) {
       appendOutput(raw, []);
       var popupCommands = ['calculator', 'calendar', 'clock', 'date', 'battery', 'temperature', 'weather', 'location', 'scratch', 'random'];
@@ -865,13 +1146,14 @@ classes: [google-only]
         whiteboard: 'whiteboard - Open a whiteboard (white background, black ink).',
         blackboard: 'blackboard - Open a blackboard (black background, white ink).',
         random: 'random - Open random number popup. random -d (double 0-1), random 1 20 (range), random -pick a b c (pick one).',
-        popup: 'popup - Open all popup windows at once (except timer).',
+        popup: 'popup - Open all popup windows at once (except timer). popup ls - List popup shortcuts. popup desmos / graph - Desmos. popup advcalc - Desmos scientific. popup wiki <topic> - Wikipedia. popup <url> / <query> - Open in popup or new window.',
         help: 'help [command] - Show this help. Use "help" for overview or "help <cmd>" for a command.',
         close: 'close - Close all open popup windows.',
-        ls: 'ls - List all available commands.',
+        ls: 'ls - List directory. ls -com - List all terminal commands.',
         clear: 'clear - Clear the terminal output.',
         history: 'history / history -l N - Show command history (last N with -l).',
         echo: 'echo <text> - Print text.',
+        def: 'def <word> - Open Merriam-Webster definition in a popup.',
         color: 'color [name] / color -ls / color reset - Change particle colors. Use color -ls to list palettes.',
         whoami: 'whoami - Show username.',
         ip: 'ip - Show IP info.',
@@ -886,10 +1168,19 @@ classes: [google-only]
         linkedin: 'linkedin - Open LinkedIn.',
         drive: 'drive - Open Google Drive.',
         docs: 'docs - Open Google Docs.',
-        website: 'website - Open website.'
+        website: 'website - Open website.',
+        utexas: 'utexas / canvas - Open UT Canvas (utexas.instructure.com).',
+        canvas: 'canvas / utexas - Open UT Canvas (utexas.instructure.com).',
+        pwd: 'pwd - Print working directory.',
+        cd: 'cd [path] - Change directory. cd .., cd ~, cd /',
+        mkdir: 'mkdir <name> - Create directory.',
+        touch: 'touch <name> - Create or update file.',
+        rm: 'rm <name> - Remove file. rm -r <name> - Remove directory recursively.',
+        cat: 'cat <name> - Show file content.',
+        vim: 'vim list / todo / tido / planner - Open tasks. vim <url> - Open website. vim <file> - Open .txt file in same popup style (saved in browser).',
       };
       if (/^help\s*$/.test(raw)) {
-        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Terminal: clear, close, history, echo, help, ls', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website'];
+        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, vim', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
         appendOutput(raw, lines);
       } else if (helpTopic && HELP[helpTopic]) {
         appendOutput(raw, [HELP[helpTopic]]);
@@ -901,7 +1192,13 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
-    if (/^ls\s*$/.test(raw)) {
+    if (/^pwd\s*$/.test(raw)) {
+      appendOutput(raw, [getCwd()]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^ls\s+-com\s*$/.test(raw)) {
       var seen = {};
       var list = [];
       COMMANDS.forEach(function(c) {
@@ -910,6 +1207,203 @@ classes: [google-only]
       });
       list.sort();
       appendOutput(raw, ['Commands: ' + list.join(', ')]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^ls\s*$/.test(raw)) {
+      var cwd = getCwd();
+      var fs = getFs();
+      var names = listDir(fs, cwd);
+      appendOutput(raw, [names.length ? names.join('  ') : '']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var cdMatch = /^cd\s+(.*)$/.exec(raw);
+    if (cdMatch) {
+      var cwd = getCwd();
+      var target = cdMatch[1].trim() || '~';
+      var resolved = resolvePath(cwd, target);
+      var fs = getFs();
+      var e = getEntry(fs, resolved);
+      if (!e) {
+        appendOutput(raw, ['cd: no such file or directory: ' + target]);
+      } else if (e.type !== 'dir') {
+        appendOutput(raw, ['cd: not a directory: ' + target]);
+      } else {
+        setCwd(resolved);
+        appendOutput(raw, []);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var mkdirMatch = /^mkdir\s+(.+)$/.exec(raw);
+    if (mkdirMatch) {
+      var cwd = getCwd();
+      var name = mkdirMatch[1].trim();
+      var fullPath = resolvePath(cwd, name);
+      var fs = getFs();
+      if (getEntry(fs, fullPath)) {
+        appendOutput(raw, ['mkdir: cannot create directory \'' + name + '\': File exists']);
+      } else if (mkdirFs(fs, fullPath)) {
+        appendOutput(raw, []);
+      } else {
+        appendOutput(raw, ['mkdir: failed to create \'' + name + '\'']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var touchMatch = /^touch\s+(.+)$/.exec(raw);
+    if (touchMatch) {
+      var cwd = getCwd();
+      var name = touchMatch[1].trim();
+      var fullPath = resolvePath(cwd, name);
+      var fs = getFs();
+      var existing = getFileContent(fs, fullPath);
+      setFileContent(fs, fullPath, existing !== undefined ? existing : '');
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var rmRecursiveMatch = /^rm\s+-r\s+(.+)$/.exec(raw);
+    if (rmRecursiveMatch) {
+      var cwd = getCwd();
+      var name = rmRecursiveMatch[1].trim();
+      var fullPath = resolvePath(cwd, name);
+      var fs = getFs();
+      var e = getEntry(fs, fullPath);
+      if (!e) {
+        appendOutput(raw, ['rm: cannot remove \'' + name + '\': No such file or directory']);
+      } else if (rmFs(fs, fullPath, true)) {
+        appendOutput(raw, []);
+      } else {
+        appendOutput(raw, ['rm: failed to remove \'' + name + '\'']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var rmMatch = /^rm\s+(.+)$/.exec(raw);
+    if (rmMatch) {
+      var cwd = getCwd();
+      var name = rmMatch[1].trim();
+      var fullPath = resolvePath(cwd, name);
+      var fs = getFs();
+      var e = getEntry(fs, fullPath);
+      if (!e) {
+        appendOutput(raw, ['rm: cannot remove \'' + name + '\': No such file or directory']);
+      } else if (e.type === 'dir') {
+        appendOutput(raw, ['rm: cannot remove \'' + name + '\': Is a directory (use rm -r)']);
+      } else if (rmFs(fs, fullPath, false)) {
+        appendOutput(raw, []);
+      } else {
+        appendOutput(raw, ['rm: failed to remove \'' + name + '\'']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var catMatch = /^cat\s+(.+)$/.exec(raw);
+    if (catMatch) {
+      var cwd = getCwd();
+      var name = catMatch[1].trim();
+      var fullPath = resolvePath(cwd, name);
+      var fs = getFs();
+      var e = getEntry(fs, fullPath);
+      if (!e) {
+        appendOutput(raw, ['cat: ' + name + ': No such file or directory']);
+      } else if (e.type === 'dir') {
+        appendOutput(raw, ['cat: ' + name + ': Is a directory']);
+      } else {
+        var content = e.content || '';
+        appendOutput(raw, content ? content.split(/\n/) : ['']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^vim\s+(list|todo|tido|planner)\s*$/.test(raw)) {
+      var tasks = [];
+      try { tasks = JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); } catch (e) {}
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-date';
+      contentBox.style.minHeight = '200px';
+      var textarea = document.createElement('textarea');
+      textarea.placeholder = 'One task per line...';
+      textarea.style.cssText = 'width:100%;height:180px;resize:vertical;font-family:inherit;font-size:14px;padding:8px;border:1px solid #444;background:#2a2a2a;color:#e0e0e0;border-radius:4px;';
+      textarea.value = Array.isArray(tasks) ? tasks.join('\n') : '';
+      var saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.textContent = 'Save';
+      saveBtn.style.cssText = 'margin-top:8px;padding:6px 14px;cursor:pointer;background:#0a7;color:#fff;border:none;border-radius:4px;';
+      saveBtn.addEventListener('click', function() {
+        var lines = textarea.value.split(/\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+        try { localStorage.setItem(TASKS_KEY, JSON.stringify(lines)); } catch (e) {}
+      });
+      contentBox.appendChild(textarea);
+      contentBox.appendChild(saveBtn);
+      createPopupWindow('Tasks / To-do', contentBox, null, { width: 400, height: 280 });
+      appendOutput(raw, ['Opened tasks.']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    var vimMatch = /^vim\s+(.+)$/.exec(raw);
+    if (vimMatch) {
+      var vimArg = vimMatch[1].trim();
+      var looksLikeUrl = /^https?:\/\//i.test(vimArg) || (/^[a-z0-9][-a-z0-9.]*\.[a-z0-9].*$/i.test(vimArg) && !/\s/.test(vimArg) && !/\.txt$/i.test(vimArg));
+      if (looksLikeUrl) {
+        var vimUrl = /^https?:\/\//i.test(vimArg) ? vimArg : 'https://' + vimArg;
+        var title = 'Website';
+        try { var va = document.createElement('a'); va.href = vimUrl; title = va.hostname || title; } catch (e) {}
+        var isGoogle = (title || '').indexOf('google') !== -1;
+        if (isGoogle) {
+          window.open(vimUrl, '_blank', 'noopener,noreferrer');
+          appendOutput(raw, ['Opened in new window.']);
+        } else {
+          var box = document.createElement('div');
+          box.style.cssText = 'flex:1;min-height:0;margin:-16px;padding:0;overflow:hidden;display:flex;flex-direction:column;';
+          var iframe = document.createElement('iframe');
+          iframe.src = vimUrl;
+          iframe.style.cssText = 'flex:1;width:100%;border:none;min-height:0;display:block;';
+          box.appendChild(iframe);
+          createPopupWindow(title, box, null, { width: 900, height: 700, minW: 400, minH: 300 });
+          appendOutput(raw, ['Opened in popup.']);
+        }
+      } else {
+        var cwd = getCwd();
+        var fullPath = resolvePath(cwd, vimArg);
+        var fs = getFs();
+        var e = getEntry(fs, fullPath);
+        if (e && e.type === 'dir') {
+          appendOutput(raw, ['vim: ' + vimArg + ': is a directory']);
+        } else {
+          if (!e) setFileContent(fs, fullPath, '');
+          var content = (e && e.type === 'file' ? e.content : '') || '';
+          var contentBox = document.createElement('div');
+          contentBox.className = 'popup-date';
+          contentBox.style.minHeight = '200px';
+          var textarea = document.createElement('textarea');
+          textarea.placeholder = 'Edit content...';
+          textarea.style.cssText = 'width:100%;height:180px;resize:vertical;font-family:inherit;font-size:14px;padding:8px;border:1px solid #444;background:#2a2a2a;color:#e0e0e0;border-radius:4px;';
+          textarea.value = content;
+          var saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.textContent = 'Save';
+          saveBtn.style.cssText = 'margin-top:8px;padding:6px 14px;cursor:pointer;background:#0a7;color:#fff;border:none;border-radius:4px;';
+          saveBtn.addEventListener('click', function() {
+            setFileContent(getFs(), fullPath, textarea.value);
+          });
+          contentBox.appendChild(textarea);
+          contentBox.appendChild(saveBtn);
+          createPopupWindow(vimArg, contentBox, null, { width: 400, height: 280 });
+          appendOutput(raw, ['Opened ' + vimArg + ' in popup.']);
+        }
+      }
       input.value = '';
       hideTabOptions();
       return;
@@ -2067,11 +2561,20 @@ classes: [google-only]
     var slidesMatch = /^slides\s*$/.exec(raw);
     var sheetsMatch = /^sheets\s*$/.exec(raw);
     var websiteMatch = /^website\s*$/.exec(raw);
+    var utexasMatch = /^utexas\s*$/.exec(raw);
+    var canvasMatch = /^canvas\s*$/.exec(raw);
     if (websiteMatch) {
       appendOutput('website', []);
       input.value = '';
       hideTabOptions();
       navigateTo('https://yashj1579.github.io/');
+      return;
+    }
+    if (utexasMatch || canvasMatch) {
+      appendOutput(raw, []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://utexas.instructure.com/');
       return;
     }
     if (driveMatch) {
@@ -2136,6 +2639,27 @@ classes: [google-only]
     var distortMatch = /^distort\s*(\d*)\s*$/.exec(raw);
     var forceMatch = /^force\s+(\d+)\s*$/.exec(raw);
     var echoMatch = /^echo\s+(.*)\s*$/.exec(raw);
+    var defMatch = /^def\s+(.+)$/.exec(raw);
+    if (defMatch) {
+      var word = defMatch[1].trim().replace(/\s+/g, '-');
+      if (!word) {
+        appendOutput(raw, ['def: usage: def <word>']);
+      } else {
+        var defUrl = 'https://www.merriam-webster.com/dictionary/' + encodeURIComponent(word);
+        var title = 'Dictionary: ' + word;
+        var box = document.createElement('div');
+        box.style.cssText = 'flex:1;min-height:0;margin:-16px;padding:0;overflow:hidden;display:flex;flex-direction:column;';
+        var iframe = document.createElement('iframe');
+        iframe.src = defUrl;
+        iframe.style.cssText = 'flex:1;width:100%;border:none;min-height:0;display:block;';
+        box.appendChild(iframe);
+        createPopupWindow(title, box, null, { width: 700, height: 600, minW: 400, minH: 300 });
+        appendOutput(raw, ['Opened in popup.']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (echoMatch) {
       appendOutput(raw, []);
       appendOutput('echo ' + echoMatch[1], [echoMatch[1]]);
@@ -2328,6 +2852,13 @@ classes: [google-only]
     }
     appendOutput(raw, []);
     input.value = raw;
+    var urlMatch = /^https?:\/\/\S+/.exec(raw);
+    if (urlMatch) {
+      navigateTo(urlMatch[0]);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     submitSearchForm();
   });
 
@@ -2400,6 +2931,7 @@ classes: [google-only]
   });
 
   initPosition();
+  if (input) input.focus();
   window.addEventListener('resize', function() {
     var r = wrapper.getBoundingClientRect();
     if (r.left + r.width > window.innerWidth || r.top + r.height > window.innerHeight) {
