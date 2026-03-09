@@ -2121,7 +2121,7 @@ classes: [google-only]
         var d = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Foggy', 48: 'Rime fog', 51: 'Light drizzle', 52: 'Drizzle', 53: 'Dense drizzle', 56: 'Freezing drizzle', 57: 'Dense freezing drizzle', 61: 'Slight rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Light freezing rain', 67: 'Freezing rain', 71: 'Slight snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Slight rain showers', 81: 'Rain showers', 82: 'Heavy rain showers', 83: 'Slight snow showers', 84: 'Snow showers', 85: 'Slight snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Severe thunderstorm' };
         return d[code] || 'Unknown';
       }
-      function showWeather(data) {
+      function showWeather(data, locationLabel) {
         loadingEl.style.display = 'none';
         var cur = data.current;
         var code = cur.weather_code || 0;
@@ -2130,6 +2130,9 @@ classes: [google-only]
         imgEl.src = '/assets/weather/' + weatherCodeToImage(code, windSpeed);
         imgEl.style.display = 'block';
         var lines = [];
+        if (locationLabel) {
+          lines.push('Location: ' + locationLabel);
+        }
         if (data.hourly && data.hourly.precipitation_probability && data.hourly.precipitation_probability[0] != null) {
           lines.push('Chance of rain: ' + data.hourly.precipitation_probability[0] + '%');
         }
@@ -2156,11 +2159,11 @@ classes: [google-only]
           detailsEl.appendChild(p);
         });
       }
-      function tryFetchWeather(lat, lon) {
+      function tryFetchWeather(lat, lon, locationLabel) {
         var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=weather_code,precipitation,relative_humidity_2m,cloud_cover,wind_speed_10m,pressure_msl&hourly=precipitation_probability';
         fetch(url).then(function(r) { return r.json(); }).then(function(data) {
           if (data.current && data.current.weather_code != null) {
-            showWeather(data);
+            showWeather(data, locationLabel);
           } else {
             loadingEl.textContent = 'Weather unavailable';
           }
@@ -2170,11 +2173,11 @@ classes: [google-only]
       }
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          function(pos) { tryFetchWeather(pos.coords.latitude, pos.coords.longitude); },
-          function() { tryFetchWeather(-33.8688, 151.2093); }
+          function(pos) { tryFetchWeather(pos.coords.latitude, pos.coords.longitude, 'Your location'); },
+          function() { tryFetchWeather(-33.8688, 151.2093, 'Sydney, Australia (default)'); }
         );
       } else {
-        tryFetchWeather(-33.8688, 151.2093);
+        tryFetchWeather(-33.8688, 151.2093, 'Sydney, Australia (default)');
       }
       input.value = '';
       hideTabOptions();
