@@ -614,6 +614,7 @@ classes: [google-only]
     'rm',
     'rm -r',
     'cat',
+    'type',
     'vim',
     'def',
     'vim list',
@@ -1177,10 +1178,11 @@ classes: [google-only]
         touch: 'touch <name> - Create or update file.',
         rm: 'rm <name> - Remove file. rm -r <name> - Remove directory recursively.',
         cat: 'cat <name> - Show file content.',
+        type: 'type <name> - Show if path is a text file, folder, or link.',
         vim: 'vim list / todo / tido / planner - Open tasks. vim <url> - Open website. vim <file> - Open .txt file in same popup style (saved in browser).',
       };
       if (/^help\s*$/.test(raw)) {
-        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, vim', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
+        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, type, vim', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
         appendOutput(raw, lines);
       } else if (helpTopic && HELP[helpTopic]) {
         appendOutput(raw, [HELP[helpTopic]]);
@@ -1308,6 +1310,28 @@ classes: [google-only]
       return;
     }
     var catMatch = /^cat\s+(.+)$/.exec(raw);
+    var typeMatch = /^type\s+(.+)$/.exec(raw);
+    if (typeMatch) {
+      var typeName = typeMatch[1].trim();
+      var cwd = getCwd();
+      var fullPath = resolvePath(cwd, typeName);
+      var fs = getFs();
+      var e = getEntry(fs, fullPath);
+      if (e) {
+        if (e.type === 'dir') {
+          appendOutput(raw, ['folder']);
+        } else {
+          appendOutput(raw, ['text file']);
+        }
+      } else if (/^https?:\/\//i.test(typeName) || (/^[a-z0-9][-a-z0-9.]*\.[a-z0-9].*$/i.test(typeName) && !/\s/.test(typeName))) {
+        appendOutput(raw, ['link']);
+      } else {
+        appendOutput(raw, ['type: ' + typeName + ': No such file or directory']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (catMatch) {
       var cwd = getCwd();
       var name = catMatch[1].trim();
