@@ -360,7 +360,7 @@ animateParticles();
 const heroText = document.getElementById('hero-text');
 const phrases = [
   "PhD Student @ University of Pennsylvania",
-  "Computer Information and Science",
+  "Computer and Information Science",
   "Research: Control, Game Theory, Autonomous Systems"
 ];
 let i = 0, j = 0, currentPhrase = [], isDeleting = false;
