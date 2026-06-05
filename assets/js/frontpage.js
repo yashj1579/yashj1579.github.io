@@ -359,8 +359,8 @@ animateParticles();
 // Typewriter effect (without "Yash Jain" - that stays permanent)
 const heroText = document.getElementById('hero-text');
 const phrases = [
-  "Senior Undergrad @ UT Austin",
-  "Double Major: Computational Engineering & Mathematics",
+  "PhD Student @ University of Pennsylvania",
+  "Computer Information and Science",
   "Research: Control, Game Theory, Autonomous Systems"
 ];
 let i = 0, j = 0, currentPhrase = [], isDeleting = false;
