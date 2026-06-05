@@ -547,6 +547,46 @@ classes: [google-only]
     return true;
   }
 
+  function collectFilesInDir(fs, dirPath, recursive) {
+    var result = [];
+    var names = listDir(fs, dirPath);
+    names.forEach(function(name) {
+      var fullPath = dirPath === '/' ? '/' + name : dirPath + '/' + name;
+      var e = getEntry(fs, fullPath);
+      if (e && e.type === 'file') {
+        result.push(fullPath);
+      } else if (recursive && e && e.type === 'dir') {
+        result = result.concat(collectFilesInDir(fs, fullPath, true));
+      }
+    });
+    return result.sort();
+  }
+
+  function openVimFileEditor(fullPath, title) {
+    var fs = getFs();
+    var e = getEntry(fs, fullPath);
+    if (!e) setFileContent(fs, fullPath, '');
+    var content = (e && e.type === 'file' ? e.content : '') || '';
+    var displayTitle = title || fullPath.split('/').pop() || fullPath;
+    var contentBox = document.createElement('div');
+    contentBox.className = 'popup-date';
+    contentBox.style.minHeight = '200px';
+    var textarea = document.createElement('textarea');
+    textarea.placeholder = 'Edit content...';
+    textarea.style.cssText = 'width:100%;height:180px;resize:vertical;font-family:inherit;font-size:14px;padding:8px;border:1px solid #444;background:#2a2a2a;color:#e0e0e0;border-radius:4px;';
+    textarea.value = content;
+    var saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.textContent = 'Save';
+    saveBtn.style.cssText = 'margin-top:8px;padding:6px 14px;cursor:pointer;background:#0a7;color:#fff;border:none;border-radius:4px;';
+    saveBtn.addEventListener('click', function() {
+      setFileContent(getFs(), fullPath, textarea.value);
+    });
+    contentBox.appendChild(textarea);
+    contentBox.appendChild(saveBtn);
+    createPopupWindow(displayTitle, contentBox, null, { width: 400, height: 280 });
+  }
+
   var commandHistory = [];
   var historyIndex = -1;
   var dragStartX, dragStartY, dragStartLeft, dragStartTop;
@@ -595,6 +635,7 @@ classes: [google-only]
     'force',
 
     'mail',
+    'outlook',
     'github',
     'linkedin',
     'drive',
@@ -610,9 +651,9 @@ classes: [google-only]
     's',
     'g',
     'chat',
+    'o',
 
     'pwd',
-    'ls',
     'ls -com',
     'cd',
     'mkdir',
@@ -627,8 +668,11 @@ classes: [google-only]
     'vim todo',
     'vim tido',
     'vim planner',
+    'vim -a',
+    'vim -d',
 
     'echo',
+    'big',
     'history',
     'ip',
     'clear',
@@ -715,6 +759,39 @@ classes: [google-only]
         }
       }
       return out;
+    }
+    var vimTabMatch = /^vim\s+(.*)$/.exec(prefix);
+    if (vimTabMatch) {
+      var vimPart = vimTabMatch[1];
+      var cwd = getCwd();
+      var fs = getFs();
+      var basePath = cwd;
+      var prefixName = vimPart;
+      if (vimPart.indexOf('/') >= 0) {
+        var vimSlash = vimPart.lastIndexOf('/');
+        basePath = resolvePath(cwd, vimPart.slice(0, vimSlash) || '/');
+        prefixName = vimPart.slice(vimSlash + 1);
+      }
+      var staticVim = ['list', 'todo', 'tido', 'planner', '-a', '-d'];
+      var lowerVim = prefixName.toLowerCase();
+      var vimMatches = staticVim.filter(function(n) { return !prefixName || n.toLowerCase().indexOf(lowerVim) === 0; });
+      var dirNames = listDir(fs, basePath);
+      dirNames.forEach(function(name) {
+        if (!prefixName || name.toLowerCase().indexOf(lowerVim) === 0) {
+          var fullPath = basePath === '/' ? '/' + name : basePath + '/' + name;
+          var ent = getEntry(fs, fullPath);
+          if (ent && ent.type === 'dir') vimMatches.push(name + '/');
+          else if (ent && ent.type === 'file') vimMatches.push(name);
+          else if (!ent && name.toLowerCase().indexOf(lowerVim) === 0) vimMatches.push(name);
+        }
+      });
+      vimMatches.sort();
+      var vimOut = [];
+      var vimPrefix = 'vim ' + (vimPart.indexOf('/') >= 0 ? vimPart.slice(0, vimPart.lastIndexOf('/') + 1) : '');
+      for (var vi = 0; vi < vimMatches.length && vimOut.length < 10; vi++) {
+        vimOut.push(vimPrefix + vimMatches[vi]);
+      }
+      return vimOut;
     }
     prefix = (prefix || '').toLowerCase();
     var out = [];
@@ -1021,6 +1098,29 @@ classes: [google-only]
       return;
     }
     commandHistory.push(raw);
+    var execFileMatch = /^\.\/(.+)$/.exec(raw);
+    if (execFileMatch) {
+      var execName = execFileMatch[1].trim();
+      var execCwd = getCwd();
+      var execFs = getFs();
+      var execPath = resolvePath(execCwd, execName);
+      var execEntry = getEntry(execFs, execPath);
+      if (execEntry && execEntry.type === 'file') {
+        var execContent = (execEntry.content || '').trim();
+        appendOutput(raw, execContent ? ['Searching: ' + execContent] : ['(empty file)']);
+        if (execContent) {
+          input.value = execContent;
+          submitSearchForm();
+        } else {
+          input.value = '';
+        }
+      } else {
+        appendOutput(raw, ['./' + execName + ': no such file']);
+        input.value = '';
+      }
+      hideTabOptions();
+      return;
+    }
     var historyMatch = /^history\s*$/.exec(raw);
     var historyLMatch = /^history\s+-l\s+(\d+)\s*$/.exec(raw);
     if (/^clear\s*$/.test(raw)) {
@@ -1124,7 +1224,7 @@ classes: [google-only]
     }
     if (/^popup\s*$/.test(raw)) {
       appendOutput(raw, []);
-      var popupCommands = ['calculator', 'calendar', 'clock', 'date', 'battery', 'temperature', 'weather', 'location', 'scratch', 'random'];
+      var popupCommands = ['calculator', 'calendar', 'clock', 'date', 'battery', 'temperature', 'weather', 'location', 'scratch', 'random', 'big'];
       popupCommands.forEach(function(cmd, i) {
         setTimeout(function() {
           input.value = cmd;
@@ -1170,7 +1270,8 @@ classes: [google-only]
         divisor: 'divisor <n> - List divisors.',
         gcd: 'gcd a b - Greatest common divisor.',
         lcm: 'lcm a b - Least common multiple.',
-        mail: 'mail - Open mail link.',
+        mail: 'mail - Open Gmail.',
+        outlook: 'outlook - Open Outlook mail.',
         github: 'github - Open GitHub.',
         linkedin: 'linkedin - Open LinkedIn.',
         drive: 'drive - Open Google Drive.',
@@ -1178,12 +1279,14 @@ classes: [google-only]
         website: 'website - Open website.',
         utexas: 'utexas / canvas - Open UT Canvas (utexas.instructure.com).',
         canvas: 'canvas / utexas - Open UT Canvas (utexas.instructure.com).',
-        d: 'd - Open Google Docs.',
+        d: 'd - Open Google Drive.',
         u: 'u - Open Canvas (utexas.instructure.com).',
         m: 'm - Open Gmail.',
         s: 's - Open Google Sheets.',
         g: 'g - Open GitHub.',
         chat: 'chat - Open ChatGPT.',
+        o: 'o - Open Outlook mail.',
+        big: 'big - Open big letter typer (scales text to fit one line).',
         pwd: 'pwd - Print working directory.',
         cd: 'cd [path] - Change directory. cd .., cd ~, cd /',
         mkdir: 'mkdir <name> - Create directory.',
@@ -1191,10 +1294,10 @@ classes: [google-only]
         rm: 'rm <name> - Remove file. rm -r <name> - Remove directory recursively.',
         cat: 'cat <name> - Show file content.',
         type: 'type <name> - Show if path is a text file, folder, or link.',
-        vim: 'vim list / todo / tido / planner - Open tasks. vim <url> - Open website. vim <file> - Open .txt file in same popup style (saved in browser).',
+        vim: 'vim list / todo / tido / planner - Open tasks. vim -a - All text files (recursive). vim -d - Text files in current dir. vim <url> - Open website. vim <file> - Open file in popup (saved in browser).',
       };
       if (/^help\s*$/.test(raw)) {
-        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, type, vim', '  Shortcuts: d (docs), u (canvas), m (mail), s (sheets), g (github), chat (ChatGPT)', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, github, linkedin, drive, docs, website, utexas, canvas'];
+        var lines = ['Type help <command> for details. Commands:', '  Popups: calculator, calc, calendar, cal, clock, time, date, timer, battery, charge, temperature, temp, weather, location, scratch, whiteboard, blackboard, random, popup, big', '  Shell: pwd, ls, ls -com, cd, mkdir, touch, rm, rm -r, cat, type, vim, ./<file>', '  Shortcuts: d (drive), u (canvas), m (mail), o (outlook), s (sheets), g (github), chat (ChatGPT)', '  Terminal: clear, close, history, echo, def, help', '  Colors: color, color -ls', '  Math: calc <expr>, convert, solve, prime, divisor, gcd, lcm', '  Links: whoami, ip, mail, outlook, github, linkedin, drive, docs, website, utexas, canvas'];
         appendOutput(raw, lines);
       } else if (helpTopic && HELP[helpTopic]) {
         appendOutput(raw, [HELP[helpTopic]]);
@@ -1362,6 +1465,34 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
+    if (/^vim\s+-a\s*$/.test(raw)) {
+      var fsAll = getFs();
+      var cwdAll = getCwd();
+      var allFiles = collectFilesInDir(fsAll, cwdAll, true);
+      if (allFiles.length === 0) {
+        appendOutput(raw, ['No text files found.']);
+      } else {
+        allFiles.forEach(function(fp) { openVimFileEditor(fp); });
+        appendOutput(raw, ['Opened ' + allFiles.length + ' file(s).']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
+    if (/^vim\s+-d\s*$/.test(raw)) {
+      var fsDir = getFs();
+      var cwdDir = getCwd();
+      var dirFiles = collectFilesInDir(fsDir, cwdDir, false);
+      if (dirFiles.length === 0) {
+        appendOutput(raw, ['No text files in current directory.']);
+      } else {
+        dirFiles.forEach(function(fp) { openVimFileEditor(fp); });
+        appendOutput(raw, ['Opened ' + dirFiles.length + ' file(s).']);
+      }
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     if (/^vim\s+(list|todo|tido|planner)\s*$/.test(raw)) {
       var tasks = [];
       try { tasks = JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); } catch (e) {}
@@ -1418,25 +1549,7 @@ classes: [google-only]
         if (e && e.type === 'dir') {
           appendOutput(raw, ['vim: ' + vimArg + ': is a directory']);
         } else {
-          if (!e) setFileContent(fs, fullPath, '');
-          var content = (e && e.type === 'file' ? e.content : '') || '';
-          var contentBox = document.createElement('div');
-          contentBox.className = 'popup-date';
-          contentBox.style.minHeight = '200px';
-          var textarea = document.createElement('textarea');
-          textarea.placeholder = 'Edit content...';
-          textarea.style.cssText = 'width:100%;height:180px;resize:vertical;font-family:inherit;font-size:14px;padding:8px;border:1px solid #444;background:#2a2a2a;color:#e0e0e0;border-radius:4px;';
-          textarea.value = content;
-          var saveBtn = document.createElement('button');
-          saveBtn.type = 'button';
-          saveBtn.textContent = 'Save';
-          saveBtn.style.cssText = 'margin-top:8px;padding:6px 14px;cursor:pointer;background:#0a7;color:#fff;border:none;border-radius:4px;';
-          saveBtn.addEventListener('click', function() {
-            setFileContent(getFs(), fullPath, textarea.value);
-          });
-          contentBox.appendChild(textarea);
-          contentBox.appendChild(saveBtn);
-          createPopupWindow(vimArg, contentBox, null, { width: 400, height: 280 });
+          openVimFileEditor(fullPath, vimArg);
           appendOutput(raw, ['Opened ' + vimArg + ' in popup.']);
         }
       }
@@ -2462,6 +2575,48 @@ classes: [google-only]
       hideTabOptions();
       return;
     }
+    if (/^big\s*$/.test(raw)) {
+      var contentBox = document.createElement('div');
+      contentBox.className = 'popup-bigtype';
+      var displayEl = document.createElement('div');
+      displayEl.className = 'bigtype-display';
+      displayEl.textContent = 'Type here';
+      var bigInput = document.createElement('input');
+      bigInput.type = 'text';
+      bigInput.className = 'bigtype-input';
+      bigInput.placeholder = 'Write something...';
+      bigInput.autocomplete = 'off';
+      function fitBigText() {
+        var text = bigInput.value || bigInput.placeholder;
+        displayEl.textContent = bigInput.value || bigInput.placeholder;
+        if (!bigInput.value) displayEl.classList.add('bigtype-display--placeholder');
+        else displayEl.classList.remove('bigtype-display--placeholder');
+        var maxW = contentBox.clientWidth - 24;
+        if (maxW <= 0) return;
+        var size = 120;
+        displayEl.style.fontSize = size + 'px';
+        while (displayEl.scrollWidth > maxW && size > 14) {
+          size -= 2;
+          displayEl.style.fontSize = size + 'px';
+        }
+      }
+      bigInput.addEventListener('input', fitBigText);
+      contentBox.appendChild(displayEl);
+      contentBox.appendChild(bigInput);
+      var bigPopup = createPopupWindow('Big Typer', contentBox, null, { width: 640, height: 220, topOffset: 80, leftOffset: 0, minW: 320, minH: 160 });
+      requestAnimationFrame(function() {
+        fitBigText();
+        bigInput.focus();
+      });
+      if (bigPopup && bigPopup.win) {
+        var ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fitBigText) : null;
+        if (ro) ro.observe(bigPopup.win);
+      }
+      appendOutput(raw, ['Opened big typer.']);
+      input.value = '';
+      hideTabOptions();
+      return;
+    }
     var randomPickMatch = /^random\s+-pick\s+(.+)$/.exec(raw);
     var randomDoubleMatch = /^random\s+-d\s*$/.exec(raw);
     var randomRangeMatch = /^random\s+(\d+)\s+(\d+)\s*$/.exec(raw);
@@ -2594,6 +2749,7 @@ classes: [google-only]
       return;
     }
     var mailMatch = /^mail\s*$/.exec(raw);
+    var outlookMatch = /^outlook\s*$/.exec(raw);
     var githubMatch = /^github\s*$/.exec(raw);
     var driveMatch = /^drive\s*$/.exec(raw);
     var docsMatch = /^docs\s*$/.exec(raw);
@@ -2606,7 +2762,7 @@ classes: [google-only]
       appendOutput('d', []);
       input.value = '';
       hideTabOptions();
-      navigateTo('https://docs.google.com/');
+      navigateTo('https://drive.google.com/');
       return;
     }
     if (/^u\s*$/.test(raw)) {
@@ -2635,6 +2791,13 @@ classes: [google-only]
       input.value = '';
       hideTabOptions();
       navigateTo('https://github.com');
+      return;
+    }
+    if (/^o\s*$/.test(raw)) {
+      appendOutput('o', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://outlook.office.com/mail/?culture=en-us&country=us');
       return;
     }
     if (/^chat\s*$/.test(raw)) {
@@ -2708,6 +2871,13 @@ classes: [google-only]
       navigateTo('https://mail.google.com/');
       return;
     }
+    if (outlookMatch) {
+      appendOutput('outlook', []);
+      input.value = '';
+      hideTabOptions();
+      navigateTo('https://outlook.office.com/mail/?culture=en-us&country=us');
+      return;
+    }
     var singleHex = /^color\s+#([0-9a-fA-F]{6})\s*$/.exec(raw);
     var radiusOnlyMatch = /^radius\s*$/.exec(raw);
     var forceOnlyMatch = /^force\s*$/.exec(raw);
@@ -2742,8 +2912,7 @@ classes: [google-only]
       return;
     }
     if (echoMatch) {
-      appendOutput(raw, []);
-      appendOutput('echo ' + echoMatch[1], [echoMatch[1]]);
+      appendOutput(raw, [echoMatch[1]]);
       input.value = '';
       hideTabOptions();
       return;

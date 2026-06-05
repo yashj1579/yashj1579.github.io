@@ -1085,6 +1085,65 @@ body.google-only .terminal-drag-wrapper {
   border-bottom: none;
 }
 
+/* Big letter typer popup */
+.popup-bigtype {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.popup-content .popup-bigtype {
+  flex: 1;
+}
+
+.popup-bigtype .bigtype-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-weight: 700;
+  font-size: 120px;
+  line-height: 1.1;
+  color: #c8f0f8;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+}
+
+.popup-bigtype .bigtype-display--placeholder {
+  color: rgba(200, 240, 248, 0.35);
+}
+
+.popup-bigtype .bigtype-input {
+  width: 100%;
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 40, 60, 0.5);
+  color: #e0f4f8;
+  outline: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.popup-bigtype .bigtype-input::placeholder {
+  color: rgba(200, 240, 248, 0.5);
+}
+
+.popup-bigtype .bigtype-input:focus {
+  border-color: rgba(0, 255, 255, 0.6);
+}
+
 /* Location popup - map with coordinate input */
 .popup-location {
   display: flex;
