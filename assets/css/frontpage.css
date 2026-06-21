@@ -3866,6 +3866,10 @@ body.blog-lightbox-open {
     max-width: 100%;
   }
 
+  .COE-meme {
+    max-width: 68%;
+  }
+
   .blog-bubble-grid {
     grid-template-columns: 1fr;
   }
