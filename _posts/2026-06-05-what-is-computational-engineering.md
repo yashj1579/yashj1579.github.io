@@ -424,7 +424,10 @@ That, more than anything else, is how I see Computational Engineering today. It 
 
 If you have any questions about Computational Engineering, UT Austin, research opportunities, coursework, or anything else related to the program, feel free to reach out at <a href="mailto:yjtexas2005@gmail.com">yjtexas2005@gmail.com</a>. Also if you notice any typos or have any suggestions for this blog, please reach out. 
 
+{%- comment -%}
 I would also highly recommend connecting with our incredible academic advisors, <a href="mailto:holly.bhasin@austin.utexas.edu">Holly Bhasin</a> and <a href="mailto:r.babcock@austin.utexas.edu">Renee Babcock</a>. They are great people and can help answer any questions you may still have including degree requirements, course planning, and opportunities within the department.
+{%- endcomment -%}
+\\
 
 Finally, don't be afraid to talk to current students. One of the best ways to learn about Computational Engineering is by hearing from people who are in the program. Every student has a slightly different perspective, and those conversations can often provide insights that you won't find on a degree plan or university website.
 
