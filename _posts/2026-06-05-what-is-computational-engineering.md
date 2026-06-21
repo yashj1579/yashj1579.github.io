@@ -4,6 +4,8 @@ title: "What is Computational Engineering?"
 date: 2026-5-05
 permalink: /blog/what-is-computational-engineering/
 excerpt: "From a UT Austin Computational Engineering alumnus"
+header:
+  og_image: /assets/images/blog/Computational_Engineer_Page.png
 tags:
   - Computational Engineering
   - UT Austin
