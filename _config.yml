@@ -13,6 +13,11 @@ defaults:
       type: "pages"
     values:
       layout: null    # tells Jekyll: don't use theme's home layout
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: blog-post
 
 plugins:
   - jekyll-feed

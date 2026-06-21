@@ -1,0 +1,28 @@
+---
+layout: default
+---
+<link rel="stylesheet" href="{{ '/assets/css/frontpage.css' | relative_url }}">
+
+<article class="blog-post-page">
+  <div class="blog-post-inner">
+    <header class="blog-post-header">
+      <a href="{{ '/blog/' | relative_url }}" class="blog-back-link">← Back to Blogs</a>
+      <h1>{{ page.title }}</h1>
+      <div class="blog-post-meta">
+        <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %d, %Y" }}</time>
+        {% if page.tags.size > 0 %}
+          <div class="blog-post-tags">
+            {% for tag in page.tags %}
+              <span class="blog-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </header>
+    <div class="blog-post-content">
+      {{ content }}
+    </div>
+  </div>
+</article>
+
+<script src="{{ '/assets/js/blog.js' | relative_url }}?v=20260702"></script>
