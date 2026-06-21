@@ -18,7 +18,7 @@ tags:
 What is Computational Engineering? Throughout my time in the department, I've noticed that several students who enter the major don't fully realize what they are signing up for or just how significant the field has become. As a recent graduate of the department, I feel well positioned to share what Computational Engineering actually is. My goal in this post is to give incoming students (hopefully you) a clearer sense of the field and what makes it such a unique and exciting area to explore.
 
 <figure class="COE-meme">
-  <img src="{{ '/assets/images/blog/COE-meme.png' | relative_url }}" alt="Life of a Computational Engineer" loading="lazy">
+  <img src="{{ '/assets/images/blog/coe-meme.png' | relative_url }}" alt="Life of a Computational Engineer" loading="lazy">
 </figure>
 
 One of the challenges in explaining Computational Engineering is that it doesn’t sit neatly within a single well-defined category. Instead, it sits at the intersection of several established fields. It relies on mathematics like an applied mathematician, programming like a computer scientist, modeling like an engineer, and data analysis like a data scientist. This ambiguity is the main reason why I've seen recruiters, professors, and even current students struggle to understand exactly where Computational Engineering fits.
@@ -208,7 +208,6 @@ Throughout the degree, you'll develop a collection of mathematical and computati
       <div class="COE-bookshelf-books" role="list"></div>
       <div class="COE-shelf-decor COE-shelf-decor--right" aria-hidden="true">
         <img class="COE-shelf-item COE-shelf-item--tall" src="{{ '/assets/images/blog/bookshelf/spaceship.png' | relative_url }}" alt="">
-        <img class="COE-shelf-item COE-shelf-item--short COE-shelf-item--wide" src="{{ '/assets/images/blog/bookshelf/book.png' | relative_url }}" alt="">
         <img class="COE-shelf-item COE-shelf-item--short" src="{{ '/assets/images/blog/bookshelf/plant2.png' | relative_url }}" alt="">
         <img class="COE-shelf-item COE-shelf-item--short" src="{{ '/assets/images/blog/bookshelf/mug.png' | relative_url }}" alt="">
         <img class="COE-shelf-item COE-shelf-item--short" src="{{ '/assets/images/blog/bookshelf/pencils.png' | relative_url }}" alt="">

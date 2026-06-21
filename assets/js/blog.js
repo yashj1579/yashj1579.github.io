@@ -341,6 +341,27 @@
 
       shelf.appendChild(btn);
     });
+
+    centerBookshelfRow(toolbox);
+  }
+
+  function centerBookshelfRow(toolbox) {
+    var row = toolbox.querySelector('.COE-bookshelf-row');
+    var books = toolbox.querySelector('.COE-bookshelf-books');
+    if (!row || !books) return;
+
+    function scrollToBooks() {
+      if (row.scrollWidth <= row.clientWidth) {
+        row.scrollLeft = 0;
+        return;
+      }
+      var target = books.offsetLeft - (row.clientWidth - books.offsetWidth) / 2;
+      row.scrollLeft = Math.max(0, Math.min(target, row.scrollWidth - row.clientWidth));
+    }
+
+    scrollToBooks();
+    requestAnimationFrame(scrollToBooks);
+    window.addEventListener('resize', scrollToBooks);
   }
 
   function initCourseMap() {
