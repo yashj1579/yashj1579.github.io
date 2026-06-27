@@ -3820,6 +3820,11 @@ body.blog-lightbox-open {
   margin-top: 0.5em;
 }
 
+.COE-resources-hero {
+  max-width: min(520px, 88%);
+  margin: 0.25em auto 1.75em;
+}
+
 .COE-resources h3 {
   font-size: 1.05em;
   font-weight: 700;

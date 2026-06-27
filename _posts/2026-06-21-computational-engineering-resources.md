@@ -14,7 +14,12 @@ tags:
 
 **Purpose:** This page is less of a blog and more of a resource hub for students looking to get ahead. Below is a collection of resources that I and other students have found helpful throughout the Computational Engineering curriculum, organized by category.
 
+<figure class="COE-figure COE-resources-hero">
+  <img src="{{ '/assets/images/blog/Computational_Engineer_Page.png' | relative_url }}" alt="Computational Engineering at The University of Texas at Austin" loading="lazy">
+</figure>
+
 **Note:** If you know of a resource or learning tool that you feel was really helpful, please send me an email!
+
 
 <div class="COE-resources" markdown="1">
 
