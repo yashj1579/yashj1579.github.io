@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://yashj1579.github.io/sitemap.xml
+Sitemap: https://yashj1579.github.io/site-map.xml
