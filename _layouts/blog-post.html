@@ -8,15 +8,11 @@ layout: default
     <header class="blog-post-header">
       <a href="{{ '/blog/' | relative_url }}" class="blog-back-link">← Back to Blogs</a>
       <h1>{{ page.title }}</h1>
+      {% if page.subtitle %}
+      <p class="blog-post-subtitle">{{ page.subtitle }}</p>
+      {% endif %}
       <div class="blog-post-meta">
         <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %d, %Y" }}</time>
-        {% if page.tags.size > 0 %}
-          <div class="blog-post-tags">
-            {% for tag in page.tags %}
-              <span class="blog-tag">{{ tag }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
       </div>
     </header>
     <div class="blog-post-content">

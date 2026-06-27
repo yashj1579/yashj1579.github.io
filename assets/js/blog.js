@@ -78,95 +78,6 @@
   var CROSSWORD_COLS = 23;
   var CROSSWORD_ROWS = 14;
 
-  /** Lightweight particles for blog index only — fixed to viewport, not document height. */
-  function initBlogListingParticles() {
-    var canvas = document.getElementById('blog-particle-canvas');
-    if (!canvas) return;
-
-    var ctx = canvas.getContext('2d', { alpha: true });
-    var particles = [];
-    var mouseX = -1000;
-    var mouseY = -1000;
-    var running = true;
-    var rafId = null;
-    var PARTICLE_COUNT = 28;
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    function Particle() { this.reset(); }
-
-    Particle.prototype.reset = function() {
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.vx = (Math.random() - 0.5) * 0.35;
-      this.vy = (Math.random() - 0.5) * 0.35;
-      this.size = Math.random() * 1.5 + 1;
-      this.opacity = Math.random() * 0.25 + 0.12;
-      this.color = Math.random() < 0.5 ? { r: 214, g: 92, b: 92 } : { r: 180, g: 120, b: 100 };
-    };
-
-    Particle.prototype.update = function() {
-      var dx = mouseX - this.x;
-      var dy = mouseY - this.y;
-      var distSq = dx * dx + dy * dy;
-      if (distSq < 14400) {
-        var dist = Math.sqrt(distSq);
-        var force = (120 - dist) / 120;
-        var angle = Math.atan2(dy, dx);
-        this.vx -= Math.cos(angle) * force * 0.15;
-        this.vy -= Math.sin(angle) * force * 0.15;
-      }
-      this.x += this.vx;
-      this.y += this.vy;
-      this.vx *= 0.98;
-      this.vy *= 0.98;
-      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
-    };
-
-    Particle.prototype.draw = function() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + this.color.r + ',' + this.color.g + ',' + this.color.b + ',' + this.opacity + ')';
-      ctx.fill();
-    };
-
-    function animate() {
-      if (!running) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (var i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
-      }
-      rafId = requestAnimationFrame(animate);
-    }
-
-    function onVisibility() {
-      running = !document.hidden;
-      if (running) {
-        animate();
-      } else if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-    }
-
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-    document.addEventListener('visibilitychange', onVisibility);
-
-    window.addEventListener('mousemove', function(e) {
-      var rect = canvas.getBoundingClientRect();
-      mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
-    }, { passive: true });
-
-    for (var i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
-    animate();
-  }
-
   function initAccordions() {
     document.querySelectorAll('.COE-accordion').forEach(function(acc) {
       var trigger = acc.querySelector('.COE-accordion-trigger');
@@ -227,7 +138,7 @@
       activeTab = null;
       if (img && defaultSrc) {
         img.src = defaultSrc;
-        img.alt = 'Airflow over an aircraft wing';
+        img.alt = 'Computational simulation of airflow over a wing';
       }
       buttons.forEach(function(b) {
         b.classList.remove('active');
@@ -645,7 +556,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    initBlogListingParticles();
     initAccordions();
     initTabs();
     initWingTabs();

@@ -1,17 +1,17 @@
 ---
 layout: blog-post
 title: "What is Computational Engineering?"
+subtitle: "From the perspective of a Computational Engineering alumnus of The University of Texas at Austin"
 date: 2026-5-05
 permalink: /blog/what-is-computational-engineering/
-excerpt: "From a UT Austin Computational Engineering alumnus"
+excerpt: "A brief explanation of what is computational engineering and how is it different from other fields."
+description: "What is Computational Engineering at UT Austin? How COE differs from computer science, data science, and electrical engineering. With real-world examples, curriculum guide, and career context."
 header:
   og_image: /assets/images/blog/Computational_Engineer_Page.png
 tags:
   - Computational Engineering
   - UT Austin
 ---
-
-<p class="COE-subtitle">From the perspective of a Computational Engineering alumnus of The University of Texas at Austin</p>
 
 <blockquote class="COE-quote">
   <p>We model the world as it is and simulate the world as it could be.</p>
@@ -53,7 +53,7 @@ In practice, this means starting from the physics that describes how a system ev
 For example, consider airflow over an aircraft wing:
 
 <div class="blog-interactive COE-wing-tabs COE-tab-group" id="COE-wing-tabs"
-  data-img-default="{{ '/assets/images/blog/airfoil.png' | relative_url }}"
+  data-img-default="{{ '/assets/images/blog/computation_airfoil.png' | relative_url }}"
   data-img-physics="{{ '/assets/images/blog/physics_airfoil.png' | relative_url }}"
   data-img-math="{{ '/assets/images/blog/math_airfoil.png' | relative_url }}"
   data-img-computation="{{ '/assets/images/blog/computation_airfoil.png' | relative_url }}">
@@ -63,7 +63,7 @@ For example, consider airflow over an aircraft wing:
     <button type="button" class="COE-tab-btn" role="tab" aria-selected="false" data-tab="computation">Computation</button>
   </div>
   <div class="COE-wing-visual">
-    <img class="COE-wing-img" src="{{ '/assets/images/blog/airfoil.png' | relative_url }}" alt="Airflow over an aircraft wing" loading="lazy">
+    <img class="COE-wing-img" src="{{ '/assets/images/blog/computation_airfoil.png' | relative_url }}" alt="Computational simulation of airflow over a wing" loading="lazy">
   </div>
   <div class="COE-tab-panels">
     <div class="COE-tab-panel COE-wing-overview active" data-panel="overview" role="tabpanel">
@@ -427,7 +427,7 @@ If you have any questions about Computational Engineering, UT Austin, research o
 {%- comment -%}
 I would also highly recommend connecting with our incredible academic advisors, <a href="mailto:holly.bhasin@austin.utexas.edu">Holly Bhasin</a> and <a href="mailto:r.babcock@austin.utexas.edu">Renee Babcock</a>. They are great people and can help answer any questions you may still have including degree requirements, course planning, and opportunities within the department.
 {%- endcomment -%}
-\\
+&nbsp;&nbsp;
 
 Finally, don't be afraid to talk to current students. One of the best ways to learn about Computational Engineering is by hearing from people who are in the program. Every student has a slightly different perspective, and those conversations can often provide insights that you won't find on a degree plan or university website.
 
@@ -462,9 +462,9 @@ Finally, don't be afraid to talk to current students. One of the best ways to le
   </button>
   <div class="COE-accordion-panel" hidden>
     <p>
-      I'm working on creating a separate blog to organize and share resources for individual Computational Engineering courses at UT Austin, as well as general advice for undergraduates in the program. If this would be helpful to you, please send me an email. Knowing there's interest will help motivate me to continue working on these sort of stuff. 
+      I've put together a separate page with resources that me and other Computational Engineering students have found helpful throughout the curriculum organized by topic, from programming and scientific computing to math and physics. See <a href="{{ '/blog/computational-engineering-resources/' | relative_url }}">Computational Engineering Resources</a>.
       <br><br>
-      In the meantime, I recommend checking out <a href="https://missing.csail.mit.edu/" target="_blank" rel="noopener">The Missing Semester of Your CS Education</a> for practical computing skills, and <a href="https://youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr&si=oY1Sj96tpXy6JRn1" target="_blank" rel="noopener">3Blue1Brown's courses on Calculus and Linear Algebra</a> for intuitive math explanations.
+      If you want a head start before entering the program, two must-watch recommendations: <a href="https://missing.csail.mit.edu/" target="_blank" rel="noopener">The Missing Semester of Your CS Education</a> for practical computing skills, and <a href="https://youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr&si=oY1Sj96tpXy6JRn1" target="_blank" rel="noopener">3Blue1Brown's courses on Calculus and Linear Algebra</a> for gaining a more intuitive understanding of mathematics.
     </p>
   </div>
 </div>
@@ -475,8 +475,8 @@ Finally, don't be afraid to talk to current students. One of the best ways to le
     <span class="COE-accordion-icon" aria-hidden="true">+</span>
   </button>
   <div class="COE-accordion-panel" hidden>
-    <p>I'm also planning a separate blog sharing advice from my own experience in Computational Engineering, along with insights from other students in the program.</p>
-    <p>If I had to leave one piece of advice for now: <strong>get involved in a technical club or research group and commit real time to it.</strong> Most of the skills that translate directly into industry or academia don't come from lectures alone, but from working through open-ended, real-world problems. UT has strong opportunities for this kind of experience, and it's where a lot of the most meaningful learning happens.</p>
+    <p>I'm planning on creating a separate blog sharing advice from my own experience in Computational Engineering, along with insights from other students in the program. If this would interest you, please send me an email since these blogs take a long time to set up and knowing that there is interest would be a big boost. </p>
+    <p>If I had to leave one piece of advice for now: <strong>get involved in a technical club or research group and commit real time to it.</strong> Most of the skills that translate directly into industry or academia don't come from lectures alone, but from working through open-ended, real-world problems. UT has great opportunities for this kind of experience, and it's where a lot of the most meaningful learning happens.</p>
   </div>
 </div>
 
