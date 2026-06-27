@@ -18,6 +18,18 @@ defaults:
       type: "posts"
     values:
       layout: blog-post
+  - scope:
+      path: "google.html"
+    values:
+      sitemap: false
+  - scope:
+      path: "googlefd165c729e6d196a.html"
+    values:
+      sitemap: false
+  - scope:
+      path: "yash-newtab-extension"
+    values:
+      sitemap: false
 
 plugins:
   - jekyll-feed
