@@ -271,7 +271,15 @@ classes: [google-only]
           baseX: (j + 0.5) * (width / cols),
           baseY: (i + 0.5) * (height / rows),
           colorIndex: Math.floor(Math.random() * currentPalette.length),
-          radius: 1 + Math.random() * 2.5
+          baseRadius: 1.2 + Math.random() * 2.8,
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: 0.6 + Math.random() * 1.4,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.8 + Math.random() * 1.6,
+          driftPhaseX: Math.random() * Math.PI * 2,
+          driftPhaseY: Math.random() * Math.PI * 2,
+          driftSpeed: 0.35 + Math.random() * 0.75,
+          driftAmp: 3 + Math.random() * 7
         });
       }
     }
@@ -293,6 +301,8 @@ classes: [google-only]
     var time = now * 0.0008;
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
+      var targetX = p.baseX + Math.sin(time * p.driftSpeed + p.driftPhaseX) * p.driftAmp;
+      var targetY = p.baseY + Math.cos(time * p.driftSpeed * 0.9 + p.driftPhaseY) * p.driftAmp;
       if (idleAmount > 0) {
         var px = p.x - centerX;
         var py = p.y - centerY;
@@ -302,12 +312,14 @@ classes: [google-only]
         var swirl = Math.sin(time + i * 0.15) * 0.5 * idleAmount;
         p.x += tx * swirl + (Math.random() - 0.5) * 1.0 * idleAmount;
         p.y += ty * swirl + (Math.random() - 0.5) * 1.0 * idleAmount;
+        targetX += Math.sin(time * 1.4 + p.driftPhaseX) * 10 * idleAmount;
+        targetY += Math.cos(time * 1.2 + p.driftPhaseY) * 10 * idleAmount;
       }
       var dx = mouseX - p.x;
       var dy = mouseY - p.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
-      var fx = (p.baseX - p.x) * springStrength;
-      var fy = (p.baseY - p.y) * springStrength;
+      var fx = (targetX - p.x) * springStrength;
+      var fy = (targetY - p.y) * springStrength;
       if (dist < influenceRadius && dist > 0) {
         var f = (1 - dist / influenceRadius) * forceFactor / 100;
         fx -= (dx / dist) * f;
@@ -315,10 +327,22 @@ classes: [google-only]
       }
       p.x += fx;
       p.y += fy;
-      var c = currentPalette[p.colorIndex % currentPalette.length];
-      ctx.fillStyle = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
+      var paletteLen = Math.max(1, currentPalette.length);
+      var colorMix = (Math.sin(time * p.colorSpeed + p.colorPhase) + 1) * 0.5;
+      var c0 = currentPalette[p.colorIndex % paletteLen];
+      var c1 = currentPalette[(p.colorIndex + 1) % paletteLen];
+      var cr = Math.round(c0.r + (c1.r - c0.r) * colorMix);
+      var cg = Math.round(c0.g + (c1.g - c0.g) * colorMix);
+      var cb = Math.round(c0.b + (c1.b - c0.b) * colorMix);
+      var brightness = 0.82 + 0.18 * Math.sin(time * p.pulseSpeed * 1.3 + p.pulsePhase);
+      cr = Math.min(255, Math.round(cr * brightness));
+      cg = Math.min(255, Math.round(cg * brightness));
+      cb = Math.min(255, Math.round(cb * brightness));
+      var radius = p.baseRadius * (0.5 + 0.5 * Math.sin(time * p.pulseSpeed + p.pulsePhase));
+      var alpha = 0.72 + 0.28 * colorMix;
+      ctx.fillStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + alpha + ')';
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
       ctx.fill();
     }
     requestAnimationFrame(anim);
