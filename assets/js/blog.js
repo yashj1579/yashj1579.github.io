@@ -555,6 +555,151 @@
     });
   }
 
+  function initSelfReferentialQuiz() {
+    var quiz = document.getElementById('SRQ-quiz');
+    if (!quiz) return;
+
+    var questions = quiz.querySelectorAll('.SRQ-question');
+    var checkBtn = document.getElementById('SRQ-check');
+    var resetBtn = document.getElementById('SRQ-reset');
+    var scoreEl = document.getElementById('SRQ-score');
+    var solutionToggle = document.querySelector('.SRQ-solution-toggle');
+    var solutionPanel = document.querySelector('.SRQ-solution-panel');
+    var solutionLabel = document.querySelector('.SRQ-solution-label');
+    var solutionIcon = document.querySelector('.SRQ-solution-icon');
+
+    var hintToggle = document.querySelector('.SRQ-hint-toggle');
+    var hintPanel = document.querySelector('.SRQ-hint-panel');
+    var hintLabel = document.querySelector('.SRQ-hint-label');
+    var hintIcon = document.querySelector('.SRQ-hint-icon');
+
+    function getOptionState(option) {
+      var input = option.querySelector('input[type="radio"]');
+      if (input && input.checked) return 'selected';
+      if (option.classList.contains('SRQ-option--eliminated')) return 'eliminated';
+      return 'neutral';
+    }
+
+    function setOptionState(option, state) {
+      var input = option.querySelector('input[type="radio"]');
+      var question = option.closest('.SRQ-question');
+      if (!input || !question) return;
+
+      option.classList.remove('SRQ-option--eliminated');
+      input.checked = false;
+
+      if (state === 'eliminated') {
+        option.classList.add('SRQ-option--eliminated');
+      } else if (state === 'selected') {
+        question.querySelectorAll('.SRQ-option input[type="radio"]').forEach(function(inp) {
+          inp.checked = false;
+        });
+        input.checked = true;
+      }
+    }
+
+    function cycleOption(option) {
+      var state = getOptionState(option);
+      var next = state === 'neutral' ? 'eliminated' : state === 'eliminated' ? 'selected' : 'neutral';
+      setOptionState(option, next);
+
+      var question = option.closest('.SRQ-question');
+      if (question) {
+        question.classList.remove('SRQ-question--correct', 'SRQ-question--incorrect', 'SRQ-question--skipped');
+      }
+    }
+
+    function clearEliminated() {
+      quiz.querySelectorAll('.SRQ-option--eliminated').forEach(function(option) {
+        option.classList.remove('SRQ-option--eliminated');
+      });
+    }
+
+    function clearFeedback() {
+      questions.forEach(function(q) {
+        q.classList.remove('SRQ-question--correct', 'SRQ-question--incorrect', 'SRQ-question--skipped');
+      });
+      if (scoreEl) {
+        scoreEl.hidden = true;
+        scoreEl.textContent = '';
+        scoreEl.classList.remove('SRQ-score--perfect');
+      }
+    }
+
+    function getSelectedValue(question) {
+      var checked = question.querySelector('input[type="radio"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    if (checkBtn) {
+      checkBtn.addEventListener('click', function() {
+        var correct = 0;
+
+        questions.forEach(function(q) {
+          var answer = q.getAttribute('data-answer');
+          var selected = getSelectedValue(q);
+
+          q.classList.remove('SRQ-question--correct', 'SRQ-question--incorrect', 'SRQ-question--skipped');
+
+          if (!selected) {
+            q.classList.add('SRQ-question--skipped');
+            return;
+          }
+
+          if (selected === answer) {
+            correct++;
+            q.classList.add('SRQ-question--correct');
+          } else {
+            q.classList.add('SRQ-question--incorrect');
+          }
+        });
+
+        if (scoreEl) {
+          scoreEl.hidden = false;
+          scoreEl.textContent = correct + ' of ' + questions.length + ' correct';
+          scoreEl.classList.toggle('SRQ-score--perfect', correct === questions.length);
+        }
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        quiz.querySelectorAll('input[type="radio"]').forEach(function(input) {
+          input.checked = false;
+        });
+        clearEliminated();
+        clearFeedback();
+      });
+    }
+
+    if (hintToggle && hintPanel) {
+      hintToggle.addEventListener('click', function() {
+        var open = hintToggle.getAttribute('aria-expanded') === 'true';
+        hintToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+        hintPanel.hidden = open;
+        if (hintLabel) hintLabel.textContent = open ? 'Editor\'s Hint' : 'Close Hint';
+        if (hintIcon) hintIcon.textContent = open ? '+' : '-';
+      });
+    }
+
+    if (solutionToggle && solutionPanel) {
+      solutionToggle.addEventListener('click', function() {
+        var open = solutionToggle.getAttribute('aria-expanded') === 'true';
+        solutionToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+        solutionPanel.hidden = open;
+        if (solutionLabel) solutionLabel.textContent = open ? 'Spoiler Edition (Answers)' : 'Close solution';
+        if (solutionIcon) solutionIcon.textContent = open ? '+' : '-';
+      });
+    }
+
+    quiz.querySelectorAll('.SRQ-option').forEach(function(option) {
+      option.addEventListener('click', function(e) {
+        e.preventDefault();
+        cycleOption(option);
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     initAccordions();
     initTabs();
@@ -564,5 +709,6 @@
     initCourseMap();
     initCrossword();
     initImageLightbox();
+    initSelfReferentialQuiz();
   });
 })();
