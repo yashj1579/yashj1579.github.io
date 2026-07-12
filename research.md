@@ -6,13 +6,15 @@ permalink: /research/
 
 <link rel="stylesheet" href="{{ '/assets/css/frontpage.css' | relative_url }}">
 
-<section class="projects-page">
-  <canvas id="projects-particle-canvas"></canvas>
-  <h1>Research</h1>
+<section class="projects-page research-page">
 
-  <div class="project-card-expandable">
-    <div class="project-card-header">
-      <h2>Bayesian Inverse Games with High-Dimensional Multi-Modal Observations</h2>
+  <div class="SRQ-newspaper research-newspaper">
+    <header class="SRQ-masthead research-masthead">
+      <p class="SRQ-masthead-kicker">Yash Jain · Research</p>
+      <h3 class="SRQ-masthead-title research-masthead-title">Bayesian Inverse Games High-Dimensional Multi-Modal Observations</h3>
+    </header>
+
+    <div class="project-card-expandable">
       <div class="project-tags">
         <span class="tag">Inverse Problems</span>
         <span class="tag">Bayesian Inference</span>
@@ -20,7 +22,6 @@ permalink: /research/
         <span class="tag">Multi-Modal Representation Learning</span>
         <span class="tag">Planning Under Uncertainty</span>
       </div>
-    </div>
     
     <div class="project-section video-section">
       <h3>Model Comparison</h3>
@@ -85,11 +86,16 @@ permalink: /research/
         <p>This work demonstrates that incorporating uncertainty and multi-modal perception into inverse games significantly improves intent inference in interactive environments. The resulting predictions are more robust to ambiguity, making the approach well-suited for safety-critical autonomous systems where incorrect assumptions about agent intent can lead to failure.</p>
       </div>
     </div>
+    </div>
   </div>
 
-  <div class="project-card-expandable">
-    <div class="project-card-header">
-      <h2>Moncrief Summer Research Internship - Multi-Agent Inverse Games</h2>
+  <div class="SRQ-newspaper research-newspaper">
+    <header class="SRQ-masthead research-masthead">
+      <p class="SRQ-masthead-kicker">Yash Jain · Research</p>
+      <h3 class="SRQ-masthead-title research-masthead-title">Moncrief Summer Research Internship Multi-Agent Inverse Games</h3>
+    </header>
+
+    <div class="project-card-expandable">
       <div class="project-tags">
         <span class="tag">Autonomous Driving</span>
         <span class="tag">Multi-Agent Systems</span>
@@ -97,7 +103,6 @@ permalink: /research/
         <span class="tag">Game-Theoretic Planning</span>
         <span class="tag">Simulation-Based Evaluation</span>
       </div>
-    </div>
     
     <div class="project-section">
       <h3>Poster</h3>
@@ -143,11 +148,44 @@ permalink: /research/
         <p>This work provides an early demonstration that multi-modal perception materially improves inverse game inference, even in minimal settings. The results motivate extending inverse game frameworks beyond trajectory-only data and toward richer perceptual inputs, laying groundwork for safer and more informed multi-agent decision-making in autonomous systems.</p>
       </div>
     </div>
+    </div>
   </div>
+
+  <div class="SRQ-newspaper research-newspaper">
+    <header class="SRQ-masthead research-masthead">
+      <p class="SRQ-masthead-kicker">Yash Jain · Research</p>
+      <h3 class="SRQ-masthead-title research-masthead-title">Additional Projects</h3>
+    </header>
+
+    <div class="research-mini-projects">
+      <article class="research-mini-project">
+        <h4 class="research-mini-project-title"><a href="https://github.com/luke-venk/mjolnir" target="_blank" rel="noopener">Team Mjolnir: CV Distance Detection for Throwing Events</a></h4>
+        <p>Developed a computer vision system to assist track and field officials by automatically detecting throwing event infractions and measuring throw distances.</p>
+      </article>
+      <article class="research-mini-project">
+        <h4 class="research-mini-project-title"><a href="https://github.com/yashj1579/BookVoice" target="_blank" rel="noopener">BookVoice: AI Book Narration</a></h4>
+        <p>Created an AI-powered audiobook pipeline that converts images or text into narrated audio with distinct character voices and expressive speech.</p>
+      </article>
+      <article class="research-mini-project">
+        <h4 class="research-mini-project-title"><a href="https://www.aiaautexas.com/" target="_blank" rel="noopener">AIAA UT Austin Website</a></h4>
+        <p>Designed and developed the official website for the UT Austin AIAA chapter, providing a modern and maintainable platform for members and prospective students.</p>
+      </article>
+      <article class="research-mini-project">
+        <h4 class="research-mini-project-title"><a href="{{ '/blog/' | relative_url }}">Technical Blog</a></h4>
+        <p>Write articles exploring computational mathematics, research, programming, and personal engineering projects.</p>
+      </article>
+      <article class="research-mini-project">
+        <h4 class="research-mini-project-title"><a href="https://yashj1579.github.io/google/" target="_blank" rel="noopener">Chrome Terminal Homepage</a></h4>
+        <p>Built a customizable Chrome new-tab extension with a terminal-inspired interface, AI tools, quick links, and productivity features.</p>
+      </article>
+    </div>
+  </div>
+
 </section>
 
 <script>
-// Particle Field for Research Page
+// Particle Field for Research Page — disabled for now
+/*
 function initProjectsParticles() {
   const projectsParticleCanvas = document.getElementById('projects-particle-canvas');
   if (!projectsParticleCanvas) return;
@@ -265,6 +303,7 @@ function initProjectsParticles() {
   }
   animateProjectsParticles();
 }
+*/
 
 // Video toggle functionality
 function initVideoToggle() {
@@ -475,9 +514,8 @@ function initVideoToggle() {
 
 // Expandable project cards functionality
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize particles
-  initProjectsParticles();
-  
+  // initProjectsParticles();
+
   // Initialize video toggle
   initVideoToggle();
   

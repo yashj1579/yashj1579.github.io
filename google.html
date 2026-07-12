@@ -39,12 +39,13 @@ classes: [google-only]
   var lastActivityTime = Date.now();
   var idleThreshold = 10000;
   var idleAmount = 0;
+  var linkDistance = 35;
   var defaultPalette = [
-    { r: 0, g: 105, b: 148 },
-    { r: 0, g: 150, b: 200 },
-    { r: 30, g: 144, b: 255 },
-    { r: 0, g: 180, b: 200 },
-    { r: 20, g: 120, b: 180 }
+    { r: 80, g: 80, b: 90 },
+    { r: 100, g: 100, b: 110 },
+    { r: 255, g: 140, b: 0 },
+    { r: 60, g: 60, b: 70 },
+    { r: 120, g: 120, b: 130 }
   ];
   var currentPalette = defaultPalette.slice();
 
@@ -299,6 +300,7 @@ classes: [google-only]
     var centerX = width / 2;
     var centerY = height / 2;
     var time = now * 0.0008;
+    var drawState = [];
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
       var targetX = p.baseX + Math.sin(time * p.driftSpeed + p.driftPhaseX) * p.driftAmp;
@@ -340,9 +342,36 @@ classes: [google-only]
       cb = Math.min(255, Math.round(cb * brightness));
       var radius = p.baseRadius * (0.8 + 0.5 * Math.sin(time * p.pulseSpeed + p.pulsePhase));
       var alpha = 0.72 + 0.28 * colorMix;
-      ctx.fillStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + alpha + ')';
+      drawState.push({ x: p.x, y: p.y, cr: cr, cg: cg, cb: cb, radius: radius, alpha: alpha });
+    }
+
+    for (var li = 0; li < drawState.length; li++) {
+      for (var lj = li + 1; lj < drawState.length; lj++) {
+        var a = drawState[li];
+        var b = drawState[lj];
+        var ldx = a.x - b.x;
+        var ldy = a.y - b.y;
+        var linkDist = Math.sqrt(ldx * ldx + ldy * ldy);
+        if (linkDist < linkDistance) {
+          var linkAlpha = (1 - linkDist / linkDistance) * 0.32;
+          var lr = Math.round((a.cr + b.cr) / 2);
+          var lg = Math.round((a.cg + b.cg) / 2);
+          var lb = Math.round((a.cb + b.cb) / 2);
+          ctx.strokeStyle = 'rgba(' + lr + ',' + lg + ',' + lb + ',' + linkAlpha + ')';
+          ctx.lineWidth = 1.85;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for (var di = 0; di < drawState.length; di++) {
+      var d = drawState[di];
+      ctx.fillStyle = 'rgba(' + d.cr + ',' + d.cg + ',' + d.cb + ',' + d.alpha + ')';
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
       ctx.fill();
     }
     requestAnimationFrame(anim);

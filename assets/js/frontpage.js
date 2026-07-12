@@ -232,129 +232,182 @@ function waitForMathJax() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', waitForMathJax);
-} else {
-  waitForMathJax();
-}
+// if (document.readyState === 'loading') {
+//   document.addEventListener('DOMContentLoaded', waitForMathJax);
+// } else {
+//   waitForMathJax();
+// }
 
-// Particle Field for About Me Section
-const particleCanvas = document.getElementById('particle-canvas');
-const particleCtx = particleCanvas ? particleCanvas.getContext('2d') : null;
-let mouseX = 0;
-let mouseY = 0;
-
-function resizeParticleCanvas() {
-  if (!particleCanvas || !particleCtx) return;
+(function initAboutMeField() {
+  const canvas = document.getElementById('particle-canvas');
   const aboutSection = document.querySelector('.about-me');
-  if (aboutSection) {
+  if (!canvas || !aboutSection) return;
+
+  const ctx = canvas.getContext('2d');
+  let width = 0;
+  let height = 0;
+  let particles = [];
+  let mouseX = -1000;
+  let mouseY = -1000;
+
+  const influenceRadius = 90;
+  const forceFactor = 220;
+  const idleAmount = 1;
+  const linkDistance = 68;
+
+  const palette = [
+    { r: 255, g: 100, b: 0 },
+    { r: 255, g: 180, b: 0 },
+    { r: 255, g: 80, b: 40 },
+    { r: 220, g: 50, b: 20 },
+    { r: 255, g: 140, b: 20 }
+  ];
+
+  function resize() {
     const rect = aboutSection.getBoundingClientRect();
-    particleCanvas.width = rect.width;
-    particleCanvas.height = rect.height;
-  }
-}
-if (particleCanvas) {
-  resizeParticleCanvas();
-  window.addEventListener('resize', resizeParticleCanvas);
-}
+    width = Math.max(1, Math.floor(rect.width));
+    height = Math.max(1, Math.floor(rect.height));
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.height = height + 'px';
 
-// Particle class
-class Particle {
-  constructor() {
-    this.reset();
-  }
-  
-  reset() {
-    this.x = Math.random() * particleCanvas.width;
-    this.y = Math.random() * particleCanvas.height;
-    this.vx = (Math.random() - 0.5) * 0.5;
-    this.vy = (Math.random() - 0.5) * 0.5;
-    this.size = Math.random() * 2 + 1;
-    this.opacity = Math.random() * 0.5 + 0.2;
-    // Random color from red, orange, yellow spectrum
-    const colorValue = Math.random();
-    if (colorValue < 0.33) {
-      this.color = { r: 255, g: 50, b: 50 }; // Red
-    } else if (colorValue < 0.66) {
-      this.color = { r: 255, g: 165, b: 0 }; // Orange
-    } else {
-      this.color = { r: 255, g: 255, b: 0 }; // Yellow
+    const spacing = 30;
+    const cols = Math.max(2, Math.floor(width / spacing));
+    const rows = Math.max(2, Math.floor(height / spacing));
+    particles = [];
+
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        particles.push({
+          x: (j + 0.5) * (width / cols),
+          y: (i + 0.5) * (height / rows),
+          baseX: (j + 0.5) * (width / cols),
+          baseY: (i + 0.5) * (height / rows),
+          colorIndex: Math.floor(Math.random() * palette.length),
+          baseRadius: 2 + Math.random() * 1.4,
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: 0.25 + Math.random() * 0.35,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.08 + Math.random() * 0.35,
+          driftPhaseX: Math.random() * Math.PI * 2,
+          driftPhaseY: Math.random() * Math.PI * 2,
+          driftSpeed: 0.05 + Math.random() * 0.08,
+          driftAmp: 10 + Math.random() * 12
+        });
+      }
     }
   }
-  
-  update() {
-    // Calculate distance to mouse
-    const dx = mouseX - this.x;
-    const dy = mouseY - this.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDistance = 150;
-    
-    if (distance < maxDistance) {
-      // Push particle away from mouse
-      const force = (maxDistance - distance) / maxDistance;
-      const angle = Math.atan2(dy, dx);
-      this.vx -= Math.cos(angle) * force * 0.3;
-      this.vy -= Math.sin(angle) * force * 0.3;
+
+  function animate() {
+    if (!ctx || !width || !height) {
+      requestAnimationFrame(animate);
+      return;
     }
-    
-    // Apply velocity
-    this.x += this.vx;
-    this.y += this.vy;
-    
-    // Damping
-    this.vx *= 0.98;
-    this.vy *= 0.98;
-    
-    // Wrap around edges
-    if (this.x < 0) this.x = particleCanvas.width;
-    if (this.x > particleCanvas.width) this.x = 0;
-    if (this.y < 0) this.y = particleCanvas.height;
-    if (this.y > particleCanvas.height) this.y = 0;
-  }
-  
-  draw() {
-    particleCtx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.opacity})`;
-    particleCtx.beginPath();
-    particleCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    particleCtx.fill();
-  }
-}
 
-// Create particles (only when about-me section exists)
-if (particleCanvas && particleCtx) {
-// Create particles
-const particles = [];
-for (let i = 0; i < 1000; i++) {
-  particles.push(new Particle());
-}
+    const now = Date.now();
+    ctx.clearRect(0, 0, width, height);
 
-// Mouse tracking
-const aboutSection = document.querySelector('.about-me');
-if (aboutSection) {
+    const springStrength = 0.15;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const time = now * 0.0008;
+    const drawState = [];
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      let targetX = p.baseX + Math.sin(time * p.driftSpeed + p.driftPhaseX) * p.driftAmp;
+      let targetY = p.baseY + Math.cos(time * p.driftSpeed * 0.9 + p.driftPhaseY) * p.driftAmp;
+
+      const px = p.x - centerX;
+      const py = p.y - centerY;
+      const len = Math.sqrt(px * px + py * py) || 1;
+      const tx = -py / len;
+      const ty = px / len;
+      const swirl = Math.sin(time + i * 0.15) * 0.12 * idleAmount;
+      p.x += tx * swirl + (Math.random() - 0.5) * 0.15 * idleAmount;
+      p.y += ty * swirl + (Math.random() - 0.5) * 0.15 * idleAmount;
+      targetX += Math.sin(time * 1.4 + p.driftPhaseX) * 3 * idleAmount;
+      targetY += Math.cos(time * 1.2 + p.driftPhaseY) * 3 * idleAmount;
+
+      const dx = mouseX - p.x;
+      const dy = mouseY - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      let fx = (targetX - p.x) * springStrength;
+      let fy = (targetY - p.y) * springStrength;
+
+      if (dist < influenceRadius && dist > 0) {
+        const f = (1 - dist / influenceRadius) * forceFactor / 100;
+        fx -= (dx / dist) * f;
+        fy -= (dy / dist) * f;
+      }
+
+      p.x += fx;
+      p.y += fy;
+
+      const paletteLen = palette.length;
+      const colorMix = (Math.sin(time * p.colorSpeed + p.colorPhase) + 1) * 0.5;
+      const c0 = palette[p.colorIndex % paletteLen];
+      const c1 = palette[(p.colorIndex + 1) % paletteLen];
+      let cr = Math.round(c0.r + (c1.r - c0.r) * colorMix);
+      let cg = Math.round(c0.g + (c1.g - c0.g) * colorMix);
+      let cb = Math.round(c0.b + (c1.b - c0.b) * colorMix);
+
+      const brightness = 0.85 + 0.12 * Math.sin(time * p.pulseSpeed * 1.3 + p.pulsePhase);
+      cr = Math.min(255, Math.round(cr * brightness));
+      cg = Math.min(255, Math.round(cg * brightness));
+      cb = Math.min(255, Math.round(cb * brightness));
+
+      const radius = p.baseRadius * (0.85 + 0.35 * Math.sin(time * p.pulseSpeed + p.pulsePhase));
+      const alpha = 0.45 + 0.22 * colorMix;
+
+      drawState.push({ x: p.x, y: p.y, cr, cg, cb, radius, alpha });
+    }
+
+    for (let i = 0; i < drawState.length; i++) {
+      for (let j = i + 1; j < drawState.length; j++) {
+        const a = drawState[i];
+        const b = drawState[j];
+        const ldx = a.x - b.x;
+        const ldy = a.y - b.y;
+        const linkDist = Math.sqrt(ldx * ldx + ldy * ldy);
+        if (linkDist < linkDistance) {
+          const linkAlpha = (1 - linkDist / linkDistance) * 0.32;
+          ctx.strokeStyle = `rgba(255, 120, 40, ${linkAlpha})`;
+          ctx.lineWidth = 1.85;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for (let i = 0; i < drawState.length; i++) {
+      const d = drawState[i];
+      ctx.fillStyle = `rgba(${d.cr}, ${d.cg}, ${d.cb}, ${d.alpha})`;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
   aboutSection.addEventListener('mousemove', (e) => {
     const rect = aboutSection.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
   });
-  
+
   aboutSection.addEventListener('mouseleave', () => {
     mouseX = -1000;
     mouseY = -1000;
   });
-}
 
-function animateParticles() {
-  particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-  
-  particles.forEach(particle => {
-    particle.update();
-    particle.draw();
-  });
-  
-  requestAnimationFrame(animateParticles);
-}
-animateParticles();
-}
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(animate);
+})();
 
 // Typewriter effect (without "Yash Jain" - that stays permanent)
 const heroText = document.getElementById('hero-text');
