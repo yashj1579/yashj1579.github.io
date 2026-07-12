@@ -6,7 +6,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page.title | default: site.title }}</title>
-  <link rel="icon" type="image/png" href="{{ '/assets/images/Favicon.png' | relative_url }}">
+  <link rel="icon" href="{{ '/favicon.ico' | relative_url }}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ '/favicon-32.png' | relative_url }}">
   <!-- Critical CSS inlined: no blocking network requests, instant first paint -->
   <style>
     *{box-sizing:border-box}

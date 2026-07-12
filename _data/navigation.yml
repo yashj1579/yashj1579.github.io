@@ -1,9 +1,5 @@
 # main navigation links
 main:
-  - title: "Home"
-    url: /
-
-
   - title: "Research"
     url: /research/
 
