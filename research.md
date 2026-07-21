@@ -175,7 +175,7 @@ permalink: /research/
         <p>Write articles exploring computational mathematics, research, programming, and personal engineering projects.</p>
       </article>
       <article class="research-mini-project">
-        <h4 class="research-mini-project-title"><a href="https://yashj1579.github.io/google/" target="_blank" rel="noopener">Chrome Terminal Homepage</a></h4>
+        <h4 class="research-mini-project-title"><a href="https://github.com/yashj1579/google-terminal-chrome-extension" target="_blank" rel="noopener">Chrome Terminal Homepage</a></h4>
         <p>Built a customizable Chrome new-tab extension with a terminal-inspired interface, AI tools, quick links, and productivity features.</p>
       </article>
     </div>

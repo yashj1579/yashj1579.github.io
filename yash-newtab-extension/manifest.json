@@ -1,9 +1,0 @@
-{
-  "manifest_version": 3,
-  "name": "New Tab",
-  "version": "1.0",
-  "description": "Custom terminal homepage",
-  "chrome_url_overrides": {
-    "newtab": "newtab.html"
-  }
-}
